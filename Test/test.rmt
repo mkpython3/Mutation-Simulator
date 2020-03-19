@@ -1,0 +1,8 @@
+fasta=test.fa
+species name=Test species
+assembly name=Testassembly
+md5=b5054b21d7046a081a27aee79657ac3d
+
+std
+it None
+sn 0.01
