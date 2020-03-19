@@ -297,4 +297,4 @@ Processor: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
 All tests were performed using [memory-profiler](https://pypi.org/project/memory-profiler/).
 
 ## License
-[GPL 3](https://www.gnu.org/licenses/gpl-3.0.de.html)
+[GPL 3](https://github.com/mkpython3/Mutation-Simulator/blob/master/LICENSE)
