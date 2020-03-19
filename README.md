@@ -157,7 +157,7 @@ RMT files can be written manually in every texteditor. But if data about mutatio
 In short, this is done by counting the occurences of a mutationtype in each bin of a user-defined length along the sequence.  The rate of the mutationtype in that bin is than calculated by deviding the number of occurences by the length of the interval/bin. This can easily be done in every scripting language, or with a number of available tools.
 
 ### Choice of input
-Of course, the way the VCF or GTF file was generated, strongly influences the represented ratess. For example, the VCF file of one sample from a single resequencing project contains the variants between this sample and the reference sequence. The resulting RMT file after VCF to RMT conversion can be used to generate sequences, that have the same rate and distribution of variants and thus genetic distance as the resequenced sample. If calculating the rates using all samples from a multi-sample VCF instead, will result in a sequence with variant rates and distribution of the whole population.
+Of course, the way the VCF or GTF file was generated, strongly influences the represented rates. For example, the VCF file of one sample from a single resequencing project contains the variants between this sample and the reference sequence. The resulting RMT file after VCF to RMT conversion can be used to generate sequences, that have the same rate and distribution of variants and thus genetic distance as the resequenced sample. If calculating the rates using all samples from a multi-sample VCF instead, will result in a sequence with variant rates and distribution of the whole population.
 Thus, choosing an input file from the desired experimental setup is crucial.
 
 ### Simple example for VCF to RMT conversion
