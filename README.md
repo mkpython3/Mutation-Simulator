@@ -282,7 +282,7 @@ Processor: Intel(R) Xeon(R) CPU E5-4660 v4 @ 2.20GHz
 The upper limit of memory consumption is affected by the number of introduced mutations as well as the length of the largest chromosome mutated. Parameters chosen reflect a rather intense mutation of the genome. Thus, even genomes with large chromosomes up to 1 GB in length can be processed on a desktop computer with 64 GB of RAM.  
 
 ### Comparison
-We tested our performance against Simulome, performing SNPs, insertions and deletions with a rate of 0.000825 per base each on an [E.coli str. K-12](https://www.ncbi.nlm.nih.gov/nuccore/NC_000913.3) genome and came out 24 times faster. We also tested our performance in deletions against SVsim on the same E. coli genome with a rate of 0.000098 deletions per base and came out 207 times faster.
+We tested Mutation-Simulators performance against Simulome, performing SNPs, insertions and deletions with a rate of 0.000825 per base each on an [E.coli str. K-12](https://www.ncbi.nlm.nih.gov/nuccore/NC_000913.3) genome and came out 24 times faster. We also tested our performance in deletions against SVsim on the same E. coli genome with a rate of 0.000098 deletions per base and came out 207 times faster.
 
 Program | Parameters | Runtime [s] | Memory Peak [MB]
 --- | --- | --- | ---
