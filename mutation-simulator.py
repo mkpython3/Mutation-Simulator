@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Mutation-Simulator Version 2.0
+# Mutation-Simulator Version 2.0.1
 # Copyright (C) 2019 Marius Kühl
 
 # This program is free software: you can redistribute it and/or modify
@@ -300,7 +300,7 @@ def save_mutations_vcf(filename, fasta, chromosome, mut_list, assembly, species,
 										   entry[1] - 1:entry[1]]) + "\t.\t.\tSVTYPE=" + svtype + ";END=" + str(
 						entry[2] + 1) + ";SVLEN=-" + str(entry[2] - entry[1] + 1) + "\tGT\t1\n")
 				else:
-					hndl.write(fasta[chromosome].name + "\t" + str(entry[2] + 2) + "\t.\t" + convert_ambiguous(str(
+					hndl.write(fasta[chromosome].name + "\t" + str(entry[2] + 1) + "\t.\t" + convert_ambiguous(str(
 						fasta[chromosome][0:entry[2] + 2])) + "\t" + convert_ambiguous(fasta[chromosome][
 										   entry[2] + 1]) + "\t.\t.\tSVTYPE=" + svtype + ";END=" + str(
 						entry[2] + 2) + ";SVLEN=-" + str(entry[2] - entry[1] + 1) + "\tGT\t1\n")
@@ -376,7 +376,7 @@ def get_mutations(start, stop, mut_rates, mut_max_lengs, mut_block):
 	"""
 	mut_type_chances, mut_rate = calc_mut_type_chances(mut_rates)
 	if not mut_type_chances:
-		return False
+		return False, False, False
 	mut_positions = get_mut_positions(start, stop, mut_rate)
 	mutations = []
 	blocked_positions = blist([])
@@ -385,33 +385,37 @@ def get_mutations(start, stop, mut_rates, mut_max_lengs, mut_block):
 	i=0
 	mut_types = [choice(mut_type_chances[0], p=mut_type_chances[1], size=len(mut_positions))]
 	while i < len(mut_positions):
-		mut = random_mutation_type(mut_positions[i], stop, mut_max_lengs, mut_types[0][i])
-		if mut:
-			mutations.append(mut)
-			if not mut[0]=="sn" and not mut[0] == "in":
-				mut_range = range(mut[1], mut[2] + mut_block[mut[0]] + 1)
-				if mut[0] == "tl":
-					translocations.append(mut)
-			else:
-				mut_range = range(mut[1], mut[1] + mut_block[mut[0]]+2)
-			blocked_positions=blocked_positions+list(mut_range)
-			flag = True
-			i_before=i
-			while flag:
-				if not mut_positions[i] in mut_range:
-					flag = False
+		if mut_positions[i] not in blocked_positions:
+			mut = random_mutation_type(mut_positions[i], stop, mut_max_lengs, mut_types[0][i])
+			if mut:
+				mutations.append(mut)
+				if not mut[0] in ["sn", "in"]:
+					mut_range = range(mut[1], mut[2] + mut_block[mut[0]] + 1)
+					if mut[0] == "tl":
+						translocations.append(mut)
 				else:
-					if i + 1 < len(mut_positions):
-						i += 1
+					mut_range = range(mut[1], mut[1] + mut_block[mut[0]]+1)
+				blocked_positions=blocked_positions+list(mut_range)
+				flag = True
+				i_before=i
+				while flag:
+					if not mut_positions[i] in mut_range:
 						flag = False
 					else:
-						i = len(mut_positions)
-						flag = False
-		elif mut == None:
+						if i + 1 < len(mut_positions):
+							i += 1
+							flag = False
+						else:
+							i = len(mut_positions)
+							flag = False
+			elif mut == None:
+				i+=1
+			elif mut == False:
+				return False
+			pbar.update(i-i_before)
+		else:
 			i+=1
-		elif mut == False:
-			return False
-		pbar.update(i-i_before)
+			pbar.update(1)
 	pbar.close()
 	blocked_positions=array(blocked_positions)
 	return mutations, translocations, blocked_positions
@@ -470,11 +474,10 @@ def get_trans_inserts(translocations, data_length, blocked_positions, no_tl_regi
 			trans_inserts.append(["tli", positions[i], translocations[i][1], translocations[i][2],
 								  transloc_invert((translocations[i][2] - translocations[i][1]) + 1)])
 	else:
-		positions = rnd.sample(set(range(0, data_length)) - blocked_positions,
-							   len(set(range(0, data_length)) - blocked_positions))
+		positions = rnd.sample(set(range(0, data_length)) - set(blocked_positions), len(set(range(0, data_length)) - set(blocked_positions)))
 		rnd.shuffle(translocations)
 		for i in trange(len(translocations), desc="Finding transloc inserts"):
-			if i < len(set(range(0, data_length)) - blocked_positions):
+			if i < len(set(range(0, data_length)) - set(blocked_positions)):
 				trans_inserts.append(["tli", positions[i], translocations[i][1], translocations[i][2],
 									  transloc_invert((translocations[i][2] - translocations[i][1]) + 1)])
 			else:
