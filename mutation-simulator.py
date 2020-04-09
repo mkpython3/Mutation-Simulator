@@ -300,7 +300,7 @@ def save_mutations_vcf(filename, fasta, chromosome, mut_list, assembly, species,
 										   entry[1] - 1:entry[1]]) + "\t.\t.\tSVTYPE=" + svtype + ";END=" + str(
 						entry[2] + 1) + ";SVLEN=-" + str(entry[2] - entry[1] + 1) + "\tGT\t1\n")
 				else:
-					hndl.write(fasta[chromosome].name + "\t" + str(entry[2] + 1) + "\t.\t" + convert_ambiguous(str(
+					hndl.write(fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(str(
 						fasta[chromosome][0:entry[2] + 2])) + "\t" + convert_ambiguous(fasta[chromosome][
 										   entry[2] + 1]) + "\t.\t.\tSVTYPE=" + svtype + ";END=" + str(
 						entry[2] + 2) + ";SVLEN=-" + str(entry[2] - entry[1] + 1) + "\tGT\t1\n")
@@ -323,9 +323,7 @@ def save_mutations_vcf(filename, fasta, chromosome, mut_list, assembly, species,
 					else:
 						too_long.append(entry)
 				else:
-					hndl.write(fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(fasta[chromosome][entry[1]-1:
-						entry[1]]) + "\t" + convert_ambiguous(insert + fasta[chromosome][entry[1]-1:entry[1]]) + "\t.\t.\tSVTYPE=INS;END=" + str(
-						entry[1] + 1) + ";SVLEN=" + str(len(insert)) + "\tGT\t1\n")
+					hndl.write(fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(fasta[chromosome][int(entry[1])]) + "\t" + convert_ambiguous(insert + fasta[chromosome][int(entry[1])]) + "\t.\t.\tSVTYPE=INS:ME;END=" + str(entry[1] + 1) + ";SVLEN=" + str(len(insert)) + "\tGT\t1\n")
 		too_long = fix_too_long(too_long)  # creates a single vcf-entry for every entry past the last base
 		if not too_long == "":
 			hndl.write(fasta[chromosome].name + "\t" + str(len(fasta[chromosome])) + "\t.\t" + convert_ambiguous(str(
@@ -385,37 +383,29 @@ def get_mutations(start, stop, mut_rates, mut_max_lengs, mut_block):
 	i=0
 	mut_types = [choice(mut_type_chances[0], p=mut_type_chances[1], size=len(mut_positions))]
 	while i < len(mut_positions):
-		if mut_positions[i] not in blocked_positions:
-			mut = random_mutation_type(mut_positions[i], stop, mut_max_lengs, mut_types[0][i])
-			if mut:
-				mutations.append(mut)
-				if not mut[0] in ["sn", "in"]:
-					mut_range = range(mut[1], mut[2] + mut_block[mut[0]] + 1)
-					if mut[0] == "tl":
-						translocations.append(mut)
+		i_before=i
+		mut = random_mutation_type(mut_positions[i], stop, mut_max_lengs, mut_types[0][i])
+		if mut:
+			mutations.append(mut)
+			if not mut[0] in ["sn", "in"]:
+				mut_range = range(mut[1], mut[2] + 1 + mut_block[mut[0]])
+				if mut[0] == "tl":
+					translocations.append(mut)
+			else:
+				mut_range = range(mut[1], mut[1] + 1 + mut_block[mut[0]])
+			blocked_positions=blocked_positions+list(mut_range)
+			flag = True
+			i += 1
+			while flag and i < len(mut_positions):
+				if not mut_positions[i] in mut_range:
+					flag = False
 				else:
-					mut_range = range(mut[1], mut[1] + mut_block[mut[0]]+1)
-				blocked_positions=blocked_positions+list(mut_range)
-				flag = True
-				i_before=i
-				while flag:
-					if not mut_positions[i] in mut_range:
-						flag = False
-					else:
-						if i + 1 < len(mut_positions):
-							i += 1
-							flag = False
-						else:
-							i = len(mut_positions)
-							flag = False
-			elif mut == None:
-				i+=1
-			elif mut == False:
-				return False
-			pbar.update(i-i_before)
-		else:
+					i += 1
+		elif mut == None:
 			i+=1
-			pbar.update(1)
+		elif mut == False:
+			return False
+		pbar.update(i-i_before)
 	pbar.close()
 	blocked_positions=array(blocked_positions)
 	return mutations, translocations, blocked_positions
@@ -513,7 +503,7 @@ def random_mutation_type(start, data_length, mut_max_lengs, mut_type):
 		if not mutation[0]=="sn":
 			print("ERROR: "+mutation[0]+"l not defined")
 			return False
-	mutation.append(start)  # appends the start position to the mutation type list
+	mutation.append(int(start))  # appends the start position to the mutation type list
 	if mutation[0] == "iv":  # needs a minimum mut_max_length of 2
 		if start + mut_max_lengs["iv"] >= data_length:
 			return None  # if it cant fit at the end it will be skipped
@@ -521,13 +511,16 @@ def random_mutation_type(start, data_length, mut_max_lengs, mut_type):
 		mutation.append(stop)
 	elif mutation[0] == "du":
 		stop = rnd.randint(start, start + mut_max_lengs[mutation[0]] - 1)
-		if stop >= data_length - 1:
+		if stop > data_length:
 			stop = data_length
 		mutation.append(stop)  # appends the stop position
-	elif not mutation[0] == "iv" and not mutation[0] == "sn" and not mutation[0] == "du":
+	elif mutation[0] == "in":
 		stop = rnd.randint(start, start + mut_max_lengs[mutation[0]] - 1)
-		if stop >= data_length - 1:
-			stop = data_length - 1
+		mutation.append(stop)
+	elif mutation[0] in ["de","tl"]:
+		stop = rnd.randint(start, start + mut_max_lengs[mutation[0]] - 1)
+		if stop > data_length:
+			stop = data_length
 		mutation.append(stop)  # appends the stop position
 	return mutation
 
