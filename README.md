@@ -1,5 +1,5 @@
 # Mutation-Simulator
-**Version 2.0**
+**Version 2.0.1**
 
 Mutation-Simulator is a Python 3.7 tool for simulating SNPs and SVs in any reference genome with cohesive documentation about implemented mutations. With Mutation-Simulator, the new file format Random Mutation Tables (RMT) is introduced, which gives more simulation power to the user by creating an interface for more natural simulations within specific genomes.
 Mutation-Simulator provides 3 different modes to simulate SNPs, insertions, deletions, tandem duplications, inversions, translocations and interchromosomal translocations from the commandline or with highly configureable RMT files.
