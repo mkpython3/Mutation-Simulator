@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Mutation-Simulator Version 2.0.1
+# Mutation-Simulator Version 2.0.2
 # Copyright (C) 2019 Marius Kühl
 
 # This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ import itertools
 def main():
 	"""The main function."""
 	start = timeit.default_timer()  # runtime
-	filename, rmt, mut_rates, mut_max_lengs, mut_block, assembly_name, species_name, it_rate, ignore_warnings, titv = utilise_sysargs()  # checks the commandline arguments
+	filename, outfile_basename, rmt, mut_rates, mut_max_lengs, mut_block, assembly_name, species_name, sample_name, it_rate, ignore_warnings, titv = utilise_sysargs()  # checks the commandline arguments
 	if not filename:
 		return False
 	fasta = read_fasta(filename)  # returns pyfaidx's fasta
@@ -42,12 +42,12 @@ def main():
 	if not fasta or not fai:
 		return False
 	if rmt:
-		rmt, mut_flag, it_flag,species_name,assembly_name,mut_block,titv = load_rmt(rmt, fai, filename, ignore_warnings)
+		rmt, mut_flag, it_flag, species_name, assembly_name, sample_name, mut_block, titv = load_rmt(rmt, fai, filename, ignore_warnings)
 		if not rmt: return False
 	else:
 		rmt, mut_flag, it_flag = None, None, None
 	if mut_rates or mut_flag:
-		if not mutator(fasta, fai, mut_rates, mut_max_lengs, mut_block, rmt, filename, assembly_name, species_name, titv):
+		if not mutator(fasta, fai, mut_rates, mut_max_lengs, mut_block, rmt, outfile_basename, filename, assembly_name, species_name, sample_name, titv):
 			return False
 		else:
 			filename="_mutated.".join(filename.split("."))
@@ -90,7 +90,7 @@ def read_fasta(filename):
 		return False
 
 
-def mutator(fasta, fai, mut_rates, mut_max_lengs, mut_block, rmt, filename, assembly_name, species_name, titv):
+def mutator(fasta, fai, mut_rates, mut_max_lengs, mut_block, rmt, outfile_basename, ref_filename, assembly_name, species_name, sample_name, titv):
 	"""
 	Generates and implements mutations on a given Chromosome with rate or RMT information.
 	If rmt is given, mut_rates, mut_max_lengs and mut_block will be ignored. RMT must be set to False or None if it
@@ -103,13 +103,14 @@ def mutator(fasta, fai, mut_rates, mut_max_lengs, mut_block, rmt, filename, asse
 		mut_rates (dict): All maximum mutation lengths for any type in the same format as mut_rates.
 		mut_block (dict): The range of the blocked area after any mutation for all types of mutations.
 		rmt (dict): The rmt information from load_rmt(). Can be None.
-		filename (str): Name of the Fasta file.
+		outfile_basename (str): Basename for the Fasta and VCF output file.
 		assembly_name (str): Name of the Assembly.
 		species_name (str): Name of the species.
+		sample_name (str): Name of the sample.
 		titv (float): Transition / Transversion ratio.
 	"""
 	chromosomes = list(fasta.keys())
-	for i in trange(len(chromosomes), desc="Mutating Chromosomes"):
+	for i in trange(len(chromosomes), desc="Mutating Sequences"):
 		no_tl_regions = []
 		if rmt:
 			mut_list = blist()
@@ -141,12 +142,11 @@ def mutator(fasta, fai, mut_rates, mut_max_lengs, mut_block, rmt, filename, asse
 		mut_list.sort(key=lambda x: x[1], reverse=True)
 		record, mut_list = mutate(fasta[chromosomes[i]], mut_list, titv)
 		if not sublists_empty(mut_list):
-			if i ==0: mode ="w"
-			else: mode="a"
-			filename_save = "".join(filename.split(".")[:-1])
-			write_fasta(filename_save + "_mutated.fa", record, fasta[chromosomes[i]].long_name, fai.index[chromosomes[i]].lenc, mode)
+			if i == 0: mode = "w"
+			else: mode = "a"
+			write_fasta(outfile_basename + ".fa", record, fasta[chromosomes[i]].long_name, fai.index[chromosomes[i]].lenc, mode)
 			mut_list.sort(key=lambda x: x[1])
-			save_mutations_vcf(filename_save, fasta, chromosomes[i], mut_list, assembly_name, species_name, mode)
+			save_mutations_vcf(outfile_basename + ".vcf", ref_filename, fasta, chromosomes[i], mut_list, assembly_name, species_name, sample_name, mode)
 			del record
 			del mut_list[:]
 			del mut_list
@@ -161,18 +161,21 @@ def utilise_sysargs():
 
 	Returns:
 		filename (str): Name of the input Fasta file.
+		outfile_basename (str): Basename for the Fasta and VCF output file.
 		rmt_file (str): Name of the RMT file. Can be None.
 		mut_rates (dict): All rates for all mutation types with 2 letter acronymes.
 		mut_max_lengs (dict): All maximum mutation lengths for any type in the same format as mut_rates.
 		mut_block (dict): The range of the blocked area after any mutation for all types of mutations.
 		assembly_name (str): Name of the assembly.
 		species_name (str): Name of the species.
+		sample_name (str): Name of the sample.
 		it_rate(float): Rate at which interchromosomal translocations occure.
 		ignore_warnings (bool): Ignores RMT warnings.
 		titv (float): Transition / Transversion ratio.
 	"""
 	parser = argparse.ArgumentParser("See https://github.com/mkpython3/Mutation-Simulator/blob/master/README.md for more information about this program.")
 	parser.add_argument("file", help="Fastafile to mutate")
+	parser.add_argument("-o", "--output", help="Basename for the output files (without file extension)", default="")
 	subparsers = parser.add_subparsers(help="Generate mutations or interchromosomal translocations via rmt or arguments")
 	parser_rmt = subparsers.add_parser("rmt", help="Use random mutation table instead of arguments")
 	parser_rmt.add_argument("rmtfile", help="The rmt file")
@@ -198,10 +201,14 @@ def utilise_sysargs():
 	parser_args.add_argument("-tlb", "--translocationblock", help="Amount of bases blocked after translocations", type=int, default=1)
 	parser_args.add_argument("-a", "--assembly", help="Assembly name for the VCF file", default="Unknown")
 	parser_args.add_argument("-s", "--species", help="Species name for the VCF file", default="Unknown")
+	parser_args.add_argument("-n", "--sample", help="Sample name for the VCF file", default="SAMPLE")
 	parser_it = subparsers.add_parser("it", help="Generate interchromosomal translocations via commandline")
 	parser_it.add_argument("interchromosomalrate", help="Rate of interchromosomal translocations.", type=float)
 	args = parser.parse_args()
 	filename = args.file
+	outfile_basename = args.output
+	if not outfile_basename:
+		outfile_basename = ".".join(filename.split(".")[:-1])+"_mutated"
 	rmt_file = None
 	it_rate = None
 	mut_rates = {}
@@ -209,8 +216,9 @@ def utilise_sysargs():
 	mut_block={}
 	titv = 1
 	ignore_warnings=False
-	assembly_name=None
-	species_name=None
+	assembly_name="Unknown"
+	species_name="Unknown"
+	sample_name="SAMPLE"
 	if not hasattr(args, "rmtfile") and not hasattr(args, "interchromosomalrate"):
 		mut_rates = {"sn": args.snp, "in": args.insert, "de": args.deletion, "iv": args.inversion,
 					 "du": args.duplication, "tl": args.translocation}
@@ -222,42 +230,42 @@ def utilise_sysargs():
 			if mut_block[key] < 1: mut_block[key]=1 ; print("Block values were adjusted.")
 		assembly_name = args.assembly
 		species_name = args.species
+		sample_name = args.sample
 		titv = args.transitionstransversions
 	elif hasattr(args, "interchromosomalrate"):
 		it_rate = args.interchromosomalrate
 	else:
 		rmt_file = args.rmtfile
 		ignore_warnings=args.ignore_warnings
-	return filename, rmt_file, mut_rates, mut_max_lengs, mut_block, assembly_name, species_name, it_rate, ignore_warnings, titv
+	return filename, outfile_basename, rmt_file, mut_rates, mut_max_lengs, mut_block, assembly_name, species_name, sample_name, it_rate, ignore_warnings, titv
 
 
-def save_mutations_vcf(filename, fasta, chromosome, mut_list, assembly, species, mode):
+def save_mutations_vcf(vcf_name, ref_filename, fasta, chromosome, mut_list, assembly, species, sample, mode):
 	"""
 	Saves all mutations in a VCF file according to version 4.3.
-
 	Parameters:
-		filename (str): Name or Path for the VCF file.
+		vcf_name (str): Name or Path for the VCF file.
+		ref_filename (str): Name of the reference Fasta.
 		fasta (pyfaidx.Fasta): Chromosome information from any Fasta index file.
 		chromosome (str): Name of the Chromosome.
 		mut_list (list): A list containing sublists with all information about the inserted mutations.
 		assembly (str): Name of the assembly.
 		species (str): Name of the species.
+		sample (str): Name of the sample.
 		mode (str): Write / Append mode for the VCF writing.
 	"""
-	with open(filename + ".vcf", mode) as hndl:
+	with open(vcf_name, mode) as hndl:
 		if mode == "w":
 			now = datetime.datetime.now()
 			hndl.write("##fileformat=VCFv4.3\n")
 			hndl.write("##filedate=" + str(now.year) + str(now.month) + str(now.day) + "\n")
 			hndl.write("##source=Mutation-Simulator\n")
-			hndl.write("##reference=" + filename.split("/")[-1].split(".")[0] + ".fa\n")
+			hndl.write(f"##reference={ref_filename.split('/')[-1]}\n")
 			for chrom in list(fasta.keys()):
 				hndl.write("##contig=<ID=" + fasta[chrom].name + ",length=" + str(len(fasta[chrom])) + ",assembly=" + str(assembly) + ",species=\"" + str(species) + "\""">\n")
 			hndl.write("##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">\n")
-			hndl.write(
-				"##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n")
-			hndl.write(
-				"##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n")
+			hndl.write("##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">\n")
+			hndl.write("##INFO=<ID=SVLEN,Number=.,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">\n")
 			hndl.write("##ALT=<ID=INS,Description=\"Insert\">\n")
 			hndl.write("##ALT=<ID=DEL,Description=\"Deletion\">\n")
 			hndl.write("##ALT=<ID=DUP,Description=\"Duplication\">\n")
@@ -265,71 +273,55 @@ def save_mutations_vcf(filename, fasta, chromosome, mut_list, assembly, species,
 			hndl.write("##ALT=<ID=DEL:ME,Description=\"Deletion of mobile element\">\n")
 			hndl.write("##ALT=<ID=INS:ME,Description=\"Insertion of mobile element\">\n")
 			hndl.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
-			hndl.write("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tGENOTYPE\n")
+			hndl.write(f"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{sample}\n")
 		too_long = []
 		for i in trange(len(mut_list), desc="Writing VCF"):
 			entry = mut_list[i]
+			#start, ref, alt, info = "", "", "", ""
 			if entry[0] == "sn":
-				hndl.write(
-					fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(fasta[chromosome][entry[1]:entry[1]+1][0]) + "\t" + convert_ambiguous(str(entry[2])) + "\t.\t.\t.\tGT\t1\n")
+				start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][entry[1]]), convert_ambiguous(entry[2]), "."
 			elif entry[0] == "in":
 				if entry[1] > 0:
-					hndl.write(
-						fasta[chromosome].name + "\t" + str(entry[1]) + "\t.\t" + convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]]) + "\t" +
-						convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]] + entry[3]) + "\t.\t.\tSVTYPE=INS;END=" + str(
-							entry[1]) + ";SVLEN=" + str(len(entry[3])) + "\tGT\t1\n")
+					start, ref, alt, info = entry[1], convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]]), convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]] + entry[3]), f"SVTYPE=INS;END={entry[1]};SVLEN={len(entry[3])}"
 				else:
-					hndl.write(
-						fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(fasta[chromosome][entry[1]]) + "\t" +
-						convert_ambiguous(entry[3] + fasta[chromosome][entry[1]]) + "\t.\t.\tSVTYPE=INS;END=" + str(
-							entry[1] + 1) + ";SVLEN=" + str(len(entry[3])) + "\tGT\t1\n")
+					start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][entry[1]]), convert_ambiguous(entry[3] + fasta[chromosome][entry[1]]), f"SVTYPE=INS;END={entry[1] + 1};SVLEN={len(entry[3])}"
 			elif entry[0] == "du":
-				hndl.write(fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(str(
-					fasta[chromosome][entry[1]:entry[2] + 1])) + "\t" + convert_ambiguous(str(fasta[chromosome][entry[1]:entry[2] + 1] +
-								   entry[3])) + "\t.\t.\tSVTYPE=DUP;END=" + str(
-					entry[1] + len(fasta[chromosome][entry[1]:entry[2] + 1])) + ";SVLEN=" + str(
-					len(entry[3])) + "\tGT\t1\n")
+				start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][entry[1]:entry[2] + 1]), convert_ambiguous(fasta[chromosome][entry[1]:entry[2] + 1] + entry[3]), f"SVTYPE=DUP;END={entry[1]+len(fasta[chromosome][entry[1]:entry[2]+1])};SVLEN={len(entry[3])}"
 			elif entry[0] == "de" or entry[0] == "tl":
 				if entry[0] == "de":
-					svtype = "DEL"
+					sv_type = "DEL"
 				else:
-					svtype = "DEL:ME"
+					sv_type = "DEL:ME"
 				if entry[1] > 0:
-					hndl.write(fasta[chromosome].name + "\t" + str(entry[1]) + "\t.\t" + convert_ambiguous(str(
-						fasta[chromosome][entry[1] - 1:entry[2] + 1])) + "\t" + convert_ambiguous(fasta[chromosome][
-										   entry[1] - 1:entry[1]]) + "\t.\t.\tSVTYPE=" + svtype + ";END=" + str(
-						entry[2] + 1) + ";SVLEN=-" + str(entry[2] - entry[1] + 1) + "\tGT\t1\n")
+					start, ref, alt, info = entry[1], convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[2] + 1]), convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]]), f"SVTYPE={sv_type};END={entry[2] + 1};SVLEN=-{entry[2] - entry[1] + 1}"
 				else:
-					hndl.write(fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(str(
-						fasta[chromosome][0:entry[2] + 2])) + "\t" + convert_ambiguous(fasta[chromosome][
-										   entry[2] + 1]) + "\t.\t.\tSVTYPE=" + svtype + ";END=" + str(
-						entry[2] + 2) + ";SVLEN=-" + str(entry[2] - entry[1] + 1) + "\tGT\t1\n")
+					start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][0:entry[2] + 2]), convert_ambiguous(fasta[chromosome][entry[2] + 1]), f"SVTYPE={sv_type};END={entry[2] + 2};SVLEN=-{entry[2] - entry[1] + 1}"
 			elif entry[0] == "iv":
-				if not str(fasta[chromosome][entry[1]:entry[2] + 1]) == str(entry[3][::-1]):
-					hndl.write(fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(str(
-						fasta[chromosome][entry[1]:entry[2] + 1])) + "\t" + convert_ambiguous(str(
-						entry[3][::-1])) + "\t.\t.\tSVTYPE=INV;END=" + str(entry[2] + 1) + ";SVLEN=0\tGT\t1\n")
+				if str(fasta[chromosome][entry[1]:entry[2] + 1]) != str(entry[3][::-1]):
+					start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][entry[1]:entry[2] + 1]), convert_ambiguous(entry[3][::-1]), f"SVTYPE=INV;END={entry[2] + 1};SVLEN=0"
+				else:
+					continue
 			elif entry[0] == "tli":
+				entry[1] = int(entry[1]) ###
 				if not entry[4]:  # check for transloc inversion
 					insert = str(entry[5])
 				else:
 					insert = str(entry[5][::-1])
 				if entry[1] > 0:
 					if entry[1] < len(fasta[chromosome]):
-						hndl.write(
-							fasta[chromosome].name + "\t" + str(entry[1]) + "\t.\t" + convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]]) + "\t" +
-							convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]] + insert) + "\t.\t.\tSVTYPE=INS:ME;END=" + str(
-								entry[1]) + ";SVLEN=" + str(len(insert)) + "\tGT\t1\n")
+						start, ref, alt, info = entry[1], convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]]), convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]] + insert), f"SVTYPE=INS:ME;END={entry[1]};SVLEN={len(insert)}"
 					else:
 						too_long.append(entry)
+						continue
 				else:
-					hndl.write(fasta[chromosome].name + "\t" + str(entry[1] + 1) + "\t.\t" + convert_ambiguous(fasta[chromosome][int(entry[1])]) + "\t" + convert_ambiguous(insert + fasta[chromosome][int(entry[1])]) + "\t.\t.\tSVTYPE=INS:ME;END=" + str(entry[1] + 1) + ";SVLEN=" + str(len(insert)) + "\tGT\t1\n")
+					start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][entry[1]]), convert_ambiguous(insert + fasta[chromosome][entry[1]]), f"SVTYPE=INS:ME;END={entry[1] + 1};SVLEN={len(insert)}"
+
+			hndl.write(f"{fasta[chromosome].name}\t{start}\t.\t{ref}\t{alt}\t.\t.\t{info}\tGT\t1\n")
+
 		too_long = fix_too_long(too_long)  # creates a single vcf-entry for every entry past the last base
-		if not too_long == "":
-			hndl.write(fasta[chromosome].name + "\t" + str(len(fasta[chromosome])) + "\t.\t" + convert_ambiguous(str(
-				fasta[chromosome][len(fasta[chromosome]) - 1])) + "\t" + convert_ambiguous(str(fasta[chromosome][len(fasta[chromosome]) - 1]) +
-							   too_long) + "\t.\t.\tSVTYPE=INS:ME;END=" + str(
-					len(fasta[chromosome]) + len(too_long)) + ";SVLEN=" + str(len(too_long)) + "\tGT\t1\n")
+		if too_long:
+			start, ref, alt, info = len(fasta[chromosome]), convert_ambiguous(fasta[chromosome][len(fasta[chromosome]) - 1]), convert_ambiguous(fasta[chromosome][len(fasta[chromosome]) - 1] + too_long), f"SVTYPE=INS:ME;END={len(fasta[chromosome]) + len(too_long)};SVLEN={len(too_long)}"
+			hndl.write(f"{fasta[chromosome].name}\t{start}\t.\t{ref}\t{alt}\t.\t.\t{info}\tGT\t1\n")
 	return
 
 
@@ -379,7 +371,7 @@ def get_mutations(start, stop, mut_rates, mut_max_lengs, mut_block):
 	mutations = []
 	blocked_positions = blist([])
 	translocations = []
-	pbar = trange(len(mut_positions), desc="Finding mutations in range: "+str(start+1)+"-"+str(stop+1))
+	pbar = trange(len(mut_positions), desc=f"Finding mutations in range: {start+1}-{stop+1}")
 	i=0
 	mut_types = [choice(mut_type_chances[0], p=mut_type_chances[1], size=len(mut_positions))]
 	while i < len(mut_positions):
@@ -425,7 +417,7 @@ def calc_mut_type_chances(mut_rates):
 	rate_sum = 0
 	for mut_rate in mut_rates:  # create sum for chances
 		rate_sum = rate_sum + mut_rates[mut_rate]
-	mut_type_chances = [[],[]]  # list of tuples
+	mut_type_chances = [[],[]]
 	for mut_rate in mut_rates:  # calculate chance
 		try:
 			mut_type_chances[0].append(str(mut_rate))
@@ -500,7 +492,7 @@ def random_mutation_type(start, data_length, mut_max_lengs, mut_type):
 	"""
 	mutation = [mut_type]
 	if mutation[0]not in mut_max_lengs.keys():
-		if not mutation[0]=="sn":
+		if not mutation[0] == "sn":
 			print("ERROR: "+mutation[0]+"l not defined")
 			return False
 	mutation.append(int(start))  # appends the start position to the mutation type list
@@ -517,7 +509,7 @@ def random_mutation_type(start, data_length, mut_max_lengs, mut_type):
 	elif mutation[0] == "in":
 		stop = rnd.randint(start, start + mut_max_lengs[mutation[0]] - 1)
 		mutation.append(stop)
-	elif mutation[0] in ["de","tl"]:
+	elif mutation[0] in ["de", "tl"]:
 		stop = rnd.randint(start, start + mut_max_lengs[mutation[0]] - 1)
 		if stop > data_length:
 			stop = data_length
@@ -590,10 +582,10 @@ def interchromosomal_transloc(fasta, rate, rmt):
 			avail_chr.remove(partner)
 	chr_to_cross = list(partners.keys())
 	if len(chr_to_cross)==0:
-		print("ERROR: Not enough unblocked chromosomes to simulate interchromosomal translocations.")
+		print("ERROR: Not enough unblocked sequencess to simulate interchromosomal translocations.")
 		return False, False
 	for chrom in chr_to_cross: #apply interchromosomal translocations
-		sys.stdout.write(f"Generating interchromosomal translocations for chromosome {chrom+1} and {partners[chrom]+1}\n")
+		sys.stdout.write(f"Generating interchromosomal translocations for sequence {chrom+1} and {partners[chrom]+1}\n")
 		if rmt:
 			amount = int(((len(records[chrom])+len(records[partners[chrom]])-4)/2) * ((rmt[chrom][-1]+rmt[partners[chrom]][-1])/2))
 		else:
@@ -668,6 +660,7 @@ def load_rmt(rmt_file, fai, filename, ignore_warnings):
 		it_flag (bool): Reflects if interchromosomal translocation information is in the range_definitions.
 		species_name (str): Name of the species.
 		assembly_name (str): Name of the assembly.
+		sample_name (str): Name of the sample.
 		mut_block (dict): The range of the blocked area after any mutation for all types of mutations.
 		titv (float): Transition / Transversion ratio.
 	"""
@@ -675,7 +668,7 @@ def load_rmt(rmt_file, fai, filename, ignore_warnings):
 	rmt = read_rmt(rmt_file)
 	if rmt:
 		range_definitions, rates_std, max_lengs_std, it_std, mut_flag, it_flag, meta= parse_rmt(rmt)
-		passed,species_name,assembly_name,mut_block,titv=rmt_meta_check(meta,filename, ignore_warnings)
+		passed, species_name, assembly_name, sample_name, mut_block, titv=rmt_meta_check(meta, filename, ignore_warnings)
 		if passed:
 			range_definitions = set_missing_chr_2_std(range_definitions, len(fai.index), rates_std, max_lengs_std)
 			range_definitions = add_missing_its(range_definitions, it_std)
@@ -685,7 +678,7 @@ def load_rmt(rmt_file, fai, filename, ignore_warnings):
 			return None, None, None, None, None, None, None
 	else:
 		return None, None, None, None, None, None, None
-	return range_definitions, mut_flag, it_flag, species_name, assembly_name, mut_block, titv
+	return range_definitions, mut_flag, it_flag, species_name, assembly_name, sample_name, mut_block, titv
 
 
 def read_rmt(file):
@@ -794,25 +787,29 @@ def rmt_meta_check(meta,filename,ignore_warnings):
 				if not yn.lower() == "y":
 					check = False
 	if "species_name" in meta.keys():
-		species_name= meta["species_name"]
+		species_name = meta["species_name"]
 	else:
-		species_name=None
+		species_name = "Unknown"
 	if "assembly_name" in meta.keys():
-		assembly_name=meta["assembly_name"]
+		assembly_name = meta["assembly_name"]
 	else:
-		assembly_name=None
+		assembly_name = "Unknown"
+	if "sample_name" in meta.keys():
+		sample_name = meta["sample_name"]
+	else:
+		sample_name = "SAMPLE"
 	if "titv" in meta.keys():
-		titv=meta["titv"]
+		titv = meta["titv"]
 	else:
-		titv=1
+		titv = 1
 	for key in meta.keys():
 		for indicator in mut_indicator:
 			if key == indicator+"_block":
-				mut_block[indicator]=int(meta[key])
+				mut_block[indicator] = int(meta[key])
 	for indicator in mut_indicator:
 		if indicator not in mut_block.keys():
-			mut_block[indicator]=0
-	return check, species_name, assembly_name, mut_block, titv
+			mut_block[indicator] = 0
+	return check, species_name, assembly_name, sample_name, mut_block, titv
 
 
 def get_md5(filename):
@@ -936,7 +933,7 @@ def get_snp(base, ti_tv):
 def get_tv_Base(base):
 	"""Returns one of the two transversion bases with equal probability."""
 	if base not in ["A", "T", "C", "G"]: base = convert_ambiguous(base)
-	return {"A": ["T", "C"], "G": ["A", "T"], "T": ["G", "A"], "C": ["A", "G"], "N": ["N", "N"]}[base][randint(2)] # replace randint
+	return {"A": ["T", "C"], "G": ["C", "T"], "T": ["G", "A"], "C": ["A", "G"], "N": ["N", "N"]}[base][randint(2)] # replace randint
 
 
 def get_ti_Base(base):
@@ -962,8 +959,8 @@ def write_fasta(filename, chromosome, header, linebases, mode):
 		mode (str): Write / Append mode.
 	"""
 	with open(filename, mode) as hndl:
-		hndl.write(">"+header+"\n")
-		for i in trange(0,len(chromosome),linebases,desc="Writing Chromosome"):
+		hndl.write(f">{header}\n")
+		for i in trange(0,len(chromosome),linebases,desc="Writing Sequence"):
 			hndl.write("".join(chromosome[i:i+linebases])+"\n")
 	return
 
