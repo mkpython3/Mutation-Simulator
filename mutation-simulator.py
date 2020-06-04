@@ -38,8 +38,10 @@ def main():
 	if not filename:
 		return False
 	fasta = read_fasta(filename)  # returns pyfaidx's fasta
+	if not fasta:
+		return False
 	fai = read_fai(filename)
-	if not fasta or not fai:
+	if not fai:
 		return False
 	if rmt:
 		rmt, mut_flag, it_flag, species_name, assembly_name, sample_name, mut_block, titv = load_rmt(rmt, fai, filename, ignore_warnings)
@@ -49,19 +51,16 @@ def main():
 	if mut_rates or mut_flag:
 		if not mutator(fasta, fai, mut_rates, mut_max_lengs, mut_block, rmt, outfile_basename, filename, assembly_name, species_name, sample_name, titv):
 			return False
-		else:
-			filename="_mutated.".join(filename.split("."))
 	if it_rate or it_flag:
 		records_it, it_changes = interchromosomal_transloc(fasta, it_rate, rmt)
 		if records_it and it_changes:
 			if not subdicts_empty(it_changes):
 				mode ="w"
 				chromosomes = list(fasta.keys())
-				filename = "".join(filename.split(".")[0:-1]) + "_it"
 				for i in range(len(chromosomes)):
-					write_fasta(filename+".fa", records_it[i], fasta[chromosomes[i]].long_name,fai.index[chromosomes[i]].lenc, mode)
+					write_fasta(outfile_basename+".fa", records_it[i], fasta[chromosomes[i]].long_name, fai.index[chromosomes[i]].lenc, mode)
 					mode = "a"
-				save_it_bedpe(filename + ".bedpe", fasta, it_changes)
+				save_it_bedpe(outfile_basename+".bedpe", fasta, it_changes)
 			else:
 				print("ERROR: No interchromosomal translocations could be generated. Rate is probably too low.")
 	stop = timeit.default_timer()
@@ -77,7 +76,10 @@ def read_fai(filename):
 	try:
 		return Faidx(filename, one_based_attributes=False)
 	except(FileNotFoundError, IOError):
-		print("ERROR:" + filename + " cannot be found")
+		print(f"ERROR: {filename} cannot be found")
+		return False
+	except ValueError:
+		print(f"ERROR: Fasta file {filename} includes duplicate header")
 		return False
 
 
@@ -86,7 +88,10 @@ def read_fasta(filename):
 	try:
 		return Fasta(filename, one_based_attributes=False, as_raw=True, sequence_always_upper=True, read_ahead=10000)
 	except(FileNotFoundError, IOError):
-		print("ERROR:" + filename + " cannot be found")
+		print(f"ERROR: {filename} cannot be found")
+		return False
+	except ValueError:
+		print(f"ERROR: Fasta file {filename} includes duplicate header")
 		return False
 
 
@@ -179,7 +184,7 @@ def utilise_sysargs():
 	subparsers = parser.add_subparsers(help="Generate mutations or interchromosomal translocations via rmt or arguments")
 	parser_rmt = subparsers.add_parser("rmt", help="Use random mutation table instead of arguments")
 	parser_rmt.add_argument("rmtfile", help="The rmt file")
-	parser_rmt.add_argument("--ignore-warnings",help="Ignores RMT warnings.", action='store_true', default=False)
+	parser_rmt.add_argument("--ignore-warnings", help="Ignores RMT warnings.", action='store_true', default=False)
 	parser_args = subparsers.add_parser("args", help="Use commandline arguments for mutations instead of rmt")
 	parser_args.add_argument("-sn", "--snp", help="SNP rate", type=float, default=0)
 	parser_args.add_argument("-snb", "--snpblock", help="Amount of bases blocked after SNP", type=int, default=1)
@@ -207,8 +212,6 @@ def utilise_sysargs():
 	args = parser.parse_args()
 	filename = args.file
 	outfile_basename = args.output
-	if not outfile_basename:
-		outfile_basename = ".".join(filename.split(".")[:-1])+"_mutated"
 	rmt_file = None
 	it_rate = None
 	mut_rates = {}
@@ -232,11 +235,17 @@ def utilise_sysargs():
 		species_name = args.species
 		sample_name = args.sample
 		titv = args.transitionstransversions
+		if not outfile_basename:
+			outfile_basename = ".".join(filename.split(".")[:-1])+"_ms"
 	elif hasattr(args, "interchromosomalrate"):
 		it_rate = args.interchromosomalrate
+		if not outfile_basename:
+			outfile_basename = ".".join(filename.split(".")[:-1])+"_ms_it"
 	else:
 		rmt_file = args.rmtfile
 		ignore_warnings=args.ignore_warnings
+		if not outfile_basename:
+			outfile_basename = ".".join(filename.split(".")[:-1])+"_ms_rmt"
 	return filename, outfile_basename, rmt_file, mut_rates, mut_max_lengs, mut_block, assembly_name, species_name, sample_name, it_rate, ignore_warnings, titv
 
 
