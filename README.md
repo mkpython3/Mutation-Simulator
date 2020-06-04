@@ -1,5 +1,12 @@
 # Mutation-Simulator
-**Version 2.0.1**
+**Version 2.0.2**
+
+## Changelog
++ Added the option to set the sample name for the VCF file.
+  + -n / --sample option in ARGS
+  + sample_name meta keyword in RMT
++ Added the option to set the output file basename in all modes with the -o / --output option
++ Fixed deviating TiTv values
 
 Mutation-Simulator is a Python 3.7 tool for simulating SNPs and SVs in any reference genome with cohesive documentation about implemented mutations. With Mutation-Simulator, the new file format Random Mutation Tables (RMT) is introduced, which gives more simulation power to the user by creating an interface for more natural simulations within specific genomes.
 Mutation-Simulator provides 3 different modes to simulate SNPs, insertions, deletions, tandem duplications, inversions, translocations and interchromosomal translocations from the commandline or with highly configureable RMT files.
@@ -48,6 +55,7 @@ Option | Option | Description | Default
 -tlb | -–translocationblock | Amount of bases blocked after translocations | 1
 -a | -–assembly | Assembly name for the VCF file | "Unknown"
 -s | -–species | Species name for the VCF file | "Unknown"
+-n | -–sample | Sample name for the VCF file | "SAMPLE"
 
 The table shows all possible commandline options for ARGS. These options can be aligned with a specified value in one line. For example:
 ```sh
