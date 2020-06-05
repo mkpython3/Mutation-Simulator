@@ -1,5 +1,5 @@
 # Mutation-Simulator
-**Version 2.0.2**  
+**Version 2.0.2**
 
 Mutation-Simulator is a Python 3.7 tool for simulating SNPs and SVs in any reference genome with cohesive documentation about implemented mutations. With Mutation-Simulator, the new file format Random Mutation Tables (RMT) is introduced, which gives more simulation power to the user by creating an interface for more natural simulations within specific genomes.
 Mutation-Simulator provides 3 different modes to simulate SNPs, insertions, deletions, tandem duplications, inversions, translocations and interchromosomal translocations from the commandline or with highly configureable RMT files.
@@ -13,27 +13,30 @@ ___
 ___
 
 ## Motivation
-The simulation of mutations is a useful tool when benchmarking bioinformatics programs for variant identification and read alignment. While other simulation programs provide a set of tools to simulate mutated genomes, the lack of a central unification of multiple features, combined with the possibility to avoid a uniform distribution of mutations across the genome to enable the simulation of hot and cold spots, lead towards the development of Mutation-Simulator.
+The simulation of mutations is a useful tool when benchmarking bioinformatics programs for variant identification and read alignment. While other simulation programs provide a set of tools to simulate mutated genomes, the lack of a central unification of multiple features, combined with the possibility to avoid a uniform distribution of mutations across the genome to enable the simulation of hot and cold spots, led towards the development of Mutation-Simulator.
+This tool is not designed to be used as an evolution or inheritance simulator. It is mainly designed to assist other tools, for example de-novo assembly tools as a benchmarking tool. Mutation-Simulator solely provides the functionality to edit reference sequences into user specified configuration files ([RMT](https://github.com/mkpython3/Mutation-Simulator/blob/paper-development/rmt-docs.pdf)) or commandline options. With Mutation-Simulator it is possible to test whether other tools handle SNPs and SVs correctly. RMT files aim to assist the user in creating a benchmarking dataset that is as close to biological data as possible.
 ## Features
 * Not restricted to specific genomes / genome types
 * Can operate with full genomes or small DNA fragments in single and multiple Fasta files
 * Simple syntax
-* [VCF](https://samtools.github.io/hts-specs/VCFv4.3.pdf) documentation of introduced SNPs and Structural Variations (SVs). 
-* [BEDPE](https://bedtools.readthedocs.io/en/latest/content/general-usage.html) documentation of interchromosomal translocations
+* [VCF](https://samtools.github.io/hts-specs/VCFv4.3.pdf) documentation of introduced SNPs and Structural Variations (SVs).
+* [BEDPE](https://bedtools.readthedocs.io/en/latest/content/general-usage.html) documentation of **interchromosomal** translocations
 * SNPs support transitions / transversion rates
 * Many common SV types supported
+* Translocations are marked with INS:ME and DEL:ME in the VCF file
 * New RMT file format allows adjusting mutation-rates easily on a base resolution for more realistic mutation patterns
 * Highly configurable
+* Regions on the reference can be blocked (for example centromers)
 ## Methods
 Mutation-Simulator is executable in 3 modes: Command-line Arguments (ARGS), Interchromosomal Translocations (IT) and Random Mutation Table (RMT). These modes can be selected with the second positional argument (mode):
 ```sh
 ./mutation-simulator.py file mode options
 ```
-ARGS represents a quick way to simulate any kind of SV or SNP to a given amount and length randomly distributed across the reference genome. It provides no option to select specific areas on the genome for the mutation rates to apply to. All positions will be randomly generated across the genome on all chromosomes within the reference. The use case of ARGS confines to enabling the user to create a variant of the reference genome if no specific settings need to be considered.
+**ARGS** represents a quick way to simulate any kind of SV or SNP to a given amount and length randomly distributed across the reference genome. It provides no option to select specific areas on the genome for the mutation rates to apply to. All positions will be randomly generated across the genome on all chromosomes within the reference. The use case of ARGS confines to enabling the user to create a variant of the reference genome **if no specific settings need to be considered** and solely exists as a **quality of life feature***.
 
-The IT mode serves the same use case as ARGS, though IT is used to generate breakend events at a specified rate. To simulate interchromosomal translocations first two chromosomes will be randomly paired. Secondly the amount of breaks is determined by the specified rate. Each break is randomly generated independently from the break positions of the paired chromosome, within the first and last position of the chromosomes with a minimum distance of one. The sequence after each breakpoint will then be swapped between the paired chromosomes. Same as ARGS, IT does not provide an option to define a different rate for each chromosome in the reference.
+The **IT** mode serves **the same use case as ARGS**, though IT is used to generate breakend events at a specified rate. To simulate interchromosomal translocations first two chromosomes will be randomly paired. Secondly the amount of breaks is determined by the specified rate. Each break is randomly generated independently from the break positions of the paired chromosome, within the first and last position of the chromosomes with a minimum distance of one. The sequence after each breakpoint will then be swapped between the paired chromosomes. Same as ARGS, IT does not provide an option to define a different rate for each chromosome in the reference.
 
-RMT is a combination of the aforementioned features with the addition to define ranges of higher and lower mutation rates using an RMT file. This file format allows the user to create specific recreateable patterns in which mutations can be generated at given rates and lengths across specific chromosomes. RMT also features meta-information about the genome, specific IT rates for each chromosome in the reference, standard values for unspecified areas and blocking positions from mutating entirely.
+**RMT** is a combination of the aforementioned features with the addition to define ranges of higher and lower mutation rates using an RMT file. This file format allows the user to create **specific recreateable patterns** in which mutations can be generated at given rates and lengths across specific chromosomes. RMT also features meta-information about the genome, specific IT rates for each chromosome in the reference, standard values for unspecified areas, and blocking positions from mutating entirely.
 ### ARGS Mode
 Option | Option | Description | Default
 --- | --- | --- | :---:
@@ -63,7 +66,7 @@ The table shows all possible commandline options for ARGS. These options can be 
 ```sh
 ./mutation-simulator.py file args -sn 0.01 -in 0.005 -inl 5
 ```
-On exit, Mutation-Simulator will generate the simulated genome named after the reference file: "$_mutated.fa" together with the according VCF file "$.vcf". The Fasta index file will be generated automatically by pyfaidx whilst execution.
+On exit, Mutation-Simulator will generate the simulated genome named after the reference file: "$_ms.fa" together with the according VCF file "$_ms.vcf". This can be changed to custom output filenames with the **-o** or **--output** option that is available across all modes. The Fasta index file will be generated automatically by pyfaidx during execution.
 ### IT Mode
 IT mode only features one additional argument:
 ```sh
@@ -78,7 +81,7 @@ RMT solely requires an RMT file to operate:
 ```
 This RMT file should contain all the information needed for Mutation-Simulator to generate a highly customized simulation of mutational patterns within a specific genome.
 
-To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/paper-development/rmt-docs.pdf).  
+To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/paper-development/rmt-docs.pdf).
 To learn how to create RMT files read the Workflows section.
 ## Installation
 * Download or clone this repository
@@ -117,7 +120,7 @@ If a specific minimum distance between SNP events is desired, the command can be
 ```
 Note: Mutation-Simulator will always block at least 1 base between events.
 ### How to simulate SVs
-If a random distribution of SVs across the genome is sufficient enough, the same procedure as above can be used.  
+If a random distribution of SVs across the genome is sufficient enough, the same procedure as above can be used.
 All options of the ARGs mode can be aligned in a single command as desired. For example:
 ```sh
 ./mutation-simulator.py genome.fasta args -sn 0.01 -in 0.01 -de 0.01 -du 0.01 -iv 0.01 -tl 0.01 -inl 3 -del 3 -dul 3 -ivl 3 -tll 3
@@ -128,7 +131,7 @@ The RMT mode is preferred if any specific settings are needed eg.:
 * Setting hot / cold spots
 * Adjusting mutation types / rates / maximum lengths on a per base resolution
 
-To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/paper-development/rmt-docs.pdf).  
+To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/paper-development/rmt-docs.pdf).
 To learn how to create RMT files read the Workflows section.
 
 ### How to visualize mutation distributions from VCFs
@@ -149,7 +152,7 @@ It might be helpful to visualize the mutation distribution of a VCF file, for ex
 from pysam import VariantFile
 import seaborn as sns
 
-vcf_in = VariantFile("myVariants.vcf.gz")  
+vcf_in = VariantFile("myVariants.vcf.gz")
 
 x = []
 for rec in vcf_in.fetch('chr1'):
@@ -163,7 +166,7 @@ sns.distplot(x)
 ## Workflows
 
 ### Create RMT files
-RMT files can be written manually in every text editor. If data about mutation rate distributions of mutation types along a genomic sequence are available in a suitable format like VCF or GTF, an RMT file can be created automatically. 
+RMT files can be written manually in every text editor. If data about mutation rate distributions of mutation types along a genomic sequence are available in a suitable format like VCF or GTF, an RMT file can be created automatically.
 In short, this is done by counting the occurences of a mutation type in each bin of a user-defined length along the sequence.  The rate of the mutation type in that bin is then calculated by deviding the number of occurences by the length of the interval/bin. This can easily be done in every scripting language, or with a number of available tools.
 
 ### Choice of input
@@ -171,7 +174,7 @@ Of course, the way the VCF or GTF file was generated strongly influences the rep
 Thus, choosing an input file from the desired experimental setup is crucial.
 
 ### Simple example for VCF to RMT conversion
-The most simple case is to create an rmt file for a sequence from a **sorted** VCF file containing **one sample** and **one type** of mutation. This example workflow uses the unix command line, bcftools, bedops and samtools. 
+The most simple case is to create an rmt file for a sequence from a **sorted** VCF file containing **one sample** and **one type** of mutation. This example workflow uses the unix command line, bcftools, bedops and samtools.
 
 - Index the sequence.
 
@@ -215,7 +218,7 @@ Chr1	80000	90000|147
 Often, data is available as multi sample VCF. These can be used the same way as single-sample VCF, but need some preprocessing.
 
 - Extract only the desired sample.
-  
+
   ```bcftools view -s my_sample multi-sample.vcf.gz > only_my_sample.vcf```
 
 - Remove remaining positions of other samples that are not covered in the extracted sample or are equal to the reference sequence.
@@ -225,7 +228,7 @@ Often, data is available as multi sample VCF. These can be used the same way as 
 
 
 ### Multi-mutation-type VCF
-VCF files can contain multiple types of alternate alleles, for example SNPs, INSERTIONS and DUPLICATIONS. The type of an allele is stated in the alternative allele field. 
+VCF files can contain multiple types of alternate alleles, for example SNPs, INSERTIONS and DUPLICATIONS. The type of an allele is stated in the alternative allele field.
 '''##ALT=<ID=type,Description=description>'''
 To create an RMT file containing the rate distribution information for multiple types of mutations, the file has to be separated in one VCF for each mutation type, rates must be calculated individually and then be combined into one RMT file.
 
@@ -286,10 +289,10 @@ Chromosome size [Mbp] | Memory peak [MB] | Memory average [MB] | Runtime [s]
 1000 | 58911 | 28183 | <6000
 
 
-Testing Platform: Debian 9  
+Testing Platform: Debian 9
 Processor: Intel(R) Xeon(R) CPU E5-4660 v4 @ 2.20GHz
 
-The upper limit of memory consumption is affected by the number of introduced mutations as well as the length of the largest chromosome mutated. Parameters chosen reflect a rather intense mutation of the genome. Thus, even genomes with large chromosomes up to 1 GB in length can be processed on a desktop computer with 64 GB of RAM.  
+The upper limit of memory consumption is affected by the number of introduced mutations as well as the length of the largest chromosome mutated. Parameters chosen reflect a rather intense mutation of the genome. Thus, even genomes with large chromosomes up to 1 GB in length can be processed on a desktop computer with 64 GB of RAM.
 
 ### Comparison
 We tested Mutation-Simulator's performance against Simulome, performing SNPs, insertions and deletions with a rate of 0.000825 per base each on an [E.coli str. K-12](https://www.ncbi.nlm.nih.gov/nuccore/NC_000913.3) genome and it came out 24 times faster. We also tested its performance in deletions against SVsim on the same E. coli genome with a rate of 0.000098 deletions per base and it came out 207 times faster.
@@ -301,7 +304,7 @@ Simulome | --genome=ecoli_genome.fasta --anno=ecoli_anno.gtf --output=output --s
 Mutation-Simulator | ecoli_genome.fasta args -de 0.000098241 -del 2 | 1,1 | 105,98
 SVsim | -r ecoli_genome.fasta -o o/svsimfiles -i event | 228,0 | 22,34
 
-Testing Platform: Solus  
+Testing Platform: Solus
 Processor: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
 
 All tests were performed using [memory-profiler](https://pypi.org/project/memory-profiler/).
