@@ -14,7 +14,7 @@ ___
 
 ## Motivation
 The simulation of mutations is a useful tool when benchmarking bioinformatics programs for variant identification and read alignment. While other simulation programs provide a set of tools to simulate mutated genomes, the lack of a central unification of multiple features, combined with the possibility to avoid a uniform distribution of mutations across the genome to enable the simulation of hot and cold spots, led towards the development of Mutation-Simulator.
-This tool is not designed to be used as an evolution or inheritance simulator. It is mainly designed to assist other tools, for example de-novo assembly tools as a benchmarking tool. Mutation-Simulator solely provides the functionality to edit reference sequences into user specified configuration files ([RMT](https://github.com/mkpython3/Mutation-Simulator/blob/paper-development/rmt-docs.pdf)) or commandline options. With Mutation-Simulator it is possible to test whether other tools handle SNPs and SVs correctly. RMT files aim to assist the user in creating a benchmarking dataset that is as close to biological data as possible.
+This tool is not designed to be used as an evolution or inheritance simulator. It is mainly designed to assist other tools, for example de-novo assembly tools as a benchmarking tool. Mutation-Simulator solely provides the functionality to edit reference sequences into user specified configuration files ([RMT](https://github.com/mkpython3/Mutation-Simulator/blob/master/rmt-docs.pdf)) or commandline options. With Mutation-Simulator it is possible to test whether other tools handle SNPs and SVs correctly. RMT files aim to assist the user in creating a benchmarking dataset that is as close to biological data as possible.
 ## Features
 * Not restricted to specific genomes / genome types
 * Can operate with full genomes or small DNA fragments in single and multiple Fasta files
@@ -81,7 +81,7 @@ RMT solely requires an RMT file to operate:
 ```
 This RMT file should contain all the information needed for Mutation-Simulator to generate a highly customized simulation of mutational patterns within a specific genome.
 
-To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/paper-development/rmt-docs.pdf).
+To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/master/rmt-docs.pdf).
 To learn how to create RMT files read the Workflows section.
 ## Installation
 * Download or clone this repository
@@ -131,7 +131,7 @@ The RMT mode is preferred if any specific settings are needed eg.:
 * Setting hot / cold spots
 * Adjusting mutation types / rates / maximum lengths on a per base resolution
 
-To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/paper-development/rmt-docs.pdf).
+To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/master/rmt-docs.pdf).
 To learn how to create RMT files read the Workflows section.
 
 ### How to visualize mutation distributions from VCFs
