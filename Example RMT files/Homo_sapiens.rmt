@@ -1,3 +1,4 @@
+#source GFF: ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.annotation.gff3.gz
 std
 it None
 sn 0.01
