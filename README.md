@@ -168,7 +168,7 @@ sns.distplot(x)
 ## Workflows
 
 ### Create RMT files
-RMT files can be written manually in every text editor. If data about mutation rate distributions of mutation types along a genomic sequence are available in a suitable format like VCF or GTF, an RMT file can be created automatically.
+RMT files can be written manually in every text editor. If data about mutation rate distributions of mutation types along a genomic sequence are available in a suitable format like VCF or GTF, an RMT file can be created automatically (see [Example RMT files](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files)).
 In short, this is done by counting the occurences of a mutation type in each bin of a user-defined length along the sequence.  The rate of the mutation type in that bin is then calculated by deviding the number of occurences by the length of the interval/bin. This can easily be done in every scripting language, or with a number of available tools.
 
 ### Choice of input
