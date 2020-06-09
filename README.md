@@ -10,6 +10,7 @@ ___
   + sample_name meta keyword in RMT
 + Added the option to set the output file basename in all modes with the -o / --output option
 + Fixed deviating TiTv values
++ Added example RMT files for Human, Mouse, Zebrafish, Arabidopsis and Drosophila
 ___
 
 ## Motivation
