@@ -312,7 +312,21 @@ SVsim | -r ecoli_genome.fasta -o o/svsimfiles -i event | 228,0 | 22,34
 Testing Platform: Solus
 Processor: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
 
-All tests were performed using [memory-profiler](https://pypi.org/project/memory-profiler/).
+All tests were done using [memory-profiler](https://pypi.org/project/memory-profiler/).
+
+We also compared Mutation-Simulator's performance against simuG, performing SNPs and InDels at a rate of 0.01 and 0.1 on a 10 Mb test sequence and came out 6785 times faster.
+
+Program | Parameters | Runtime [s]
+--- | --- | ---
+Mutation-Simulator | 10Mb.fa args -sn 0.01 -in 0.005 -de 0.005 | 7
+simuG | -refseq 10Mb.fa -snp_count 100000 -indel_count 100000 -prefix output_prefix | 47497
+Mutation-Simulator | 10Mb.fa args -sn 0.1 -in 0.05 -de 0.05 | 47
+simuG | -refseq 10Mb.fa -snp_count 1000000 -indel_count 1000000 -prefix output_prefix | still calculating
+
+Testing Platform: Solus
+Processor: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
+
+This test was done using [time](https://www.gnu.org/software/time/).
 
 ## License
 [GPL 3](https://github.com/mkpython3/Mutation-Simulator/blob/master/LICENSE)
