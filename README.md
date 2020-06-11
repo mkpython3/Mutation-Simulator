@@ -93,11 +93,11 @@ For convenience and as examples, we created some ready-to-use example RMT files 
 
 Species | RMT | GFF
 --- | --- | ---
-Arabidopsis_thaliana | [Arabidopsis_thaliana.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Arabidopsis_thaliana.rmt) | [TAIR10_GFF3_genes.gff](https://www.arabidopsis.org/download_files/Genes/TAIR10_genome_release/TAIR10_gff3/TAIR10_GFF3_genes.gff)
-Danio rerio | [Danio_rerio.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Danio_rerio.rmt) | [Danio_rerio.GRCz11.100.gff3.gz](ftp://ftp.ensembl.org/pub/release-100/gff3/danio_rerio/Danio_rerio.GRCz11.100.gff3.gz)
-Drosophila melanogaster | [Drosophila_melanogaster.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Drosophila_melanogaster.rmt) | [Drosophila_melanogaster.BDGP6.28.100.gff3.gz](ftp://ftp.ensembl.org/pub/release-100/gff3/drosophila_melanogaster/Drosophila_melanogaster.BDGP6.28.100.gff3.gz)
-Homo sapiens | [Homo_sapiens.rmt](https://raw.githubusercontent.com/mkpython3/Mutation-Simulator/master/Example%20RMT%20files/Homo_sapiens.rmt) | [gencode.v34.annotation.gff3.gz](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.annotation.gff3.gz)
-Mus musculus | [Mus_musculus](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Mus_musculus.rmt) | [Mus_musculus.GRCm38.100.gff3.gz](ftp://ftp.ensembl.org/pub/release-100/gff3/mus_musculus/Mus_musculus.GRCm38.100.gff3.gz)
+Arabidopsis thaliana | [Arabidopsis_thaliana.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Arabidopsis_thaliana.rmt) | [TAIR10_GFF3_genes.gff](https://www.arabidopsis.org/download_files/Genes/TAIR10_genome_release/TAIR10_gff3/TAIR10_GFF3_genes.gff)
+Danio rerio | [Danio_rerio.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Danio_rerio.rmt) | ftp://ftp.ensembl.org/pub/release-100/gff3/danio_rerio/Danio_rerio.GRCz11.100.gff3.gz
+Drosophila melanogaster | [Drosophila_melanogaster.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Drosophila_melanogaster.rmt) | ftp://ftp.ensembl.org/pub/release-100/gff3/drosophila_melanogaster/Drosophila_melanogaster.BDGP6.28.100.gff3.gz
+Homo sapiens | [Homo_sapiens.rmt](https://raw.githubusercontent.com/mkpython3/Mutation-Simulator/master/Example%20RMT%20files/Homo_sapiens.rmt) | ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.annotation.gff3.gz
+Mus musculus | [Mus_musculus.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Mus_musculus.rmt) | ftp://ftp.ensembl.org/pub/release-100/gff3/mus_musculus/Mus_musculus.GRCm38.100.gff3.gz
 
 More details about [how these files were created](https://github.com/mkpython3/Mutation-Simulator#gff3-to-rmt) can be found in the Workflows section.
 
