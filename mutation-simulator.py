@@ -38,6 +38,7 @@ def main():
 	if not filename:
 		return False
 	fasta = read_fasta(filename)  # returns pyfaidx's fasta
+	print(len(fasta))
 	if not fasta:
 		return False
 	fai = read_fai(filename)
@@ -591,7 +592,7 @@ def interchromosomal_transloc(fasta, rate, rmt):
 			avail_chr.remove(partner)
 	chr_to_cross = list(partners.keys())
 	if len(chr_to_cross)==0:
-		print("ERROR: Not enough unblocked sequencess to simulate interchromosomal translocations.")
+		print("ERROR: Not enough unblocked sequencess to simulate interchromosomal translocations. You need at least 2 sequences to create an interchromosomal translocation.")
 		return False, False
 	for chrom in chr_to_cross: #apply interchromosomal translocations
 		sys.stdout.write(f"Generating interchromosomal translocations for sequence {chrom+1} and {partners[chrom]+1}\n")
