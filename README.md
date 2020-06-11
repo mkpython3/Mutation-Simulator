@@ -89,7 +89,7 @@ This RMT file should contain all the information needed for Mutation-Simulator t
 To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/master/rmt-docs.pdf).
 To learn how to create RMT files read the Workflows section.
 
-For convenience, [we created](https://github.com/mkpython3/Mutation-Simulator#gff3-to-rmt) some ready-to-use example RMT files for commonly used organisms, which you can find [here](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files). 
+For convenience and as examples, [we created](https://github.com/mkpython3/Mutation-Simulator#gff3-to-rmt) some ready-to-use example RMT files for commonly used organisms where alle genes are blocked for mutations. These files can be found [here](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files). 
 
 Name | Genome | Variation Source File
 --- | --- | ---
