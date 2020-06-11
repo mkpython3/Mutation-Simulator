@@ -87,9 +87,9 @@ RMT solely requires an RMT file to operate:
 This RMT file should contain all the information needed for Mutation-Simulator to generate a highly customized simulation of mutational patterns within a specific genome.
 
 To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/master/rmt-docs.pdf).
-To learn how to create RMT files read the Workflows section.
+To learn how to create RMT files read the [Workflows](https://github.com/mkpython3/Mutation-Simulator/blob/master/README.md#workflows) section.
 
-For convenience and as examples, [we created](https://github.com/mkpython3/Mutation-Simulator#gff3-to-rmt) some ready-to-use example RMT files for commonly used organisms where alle genes are blocked for mutations. These files can be found [here](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files). 
+For convenience and as examples, we created some ready-to-use example RMT files for commonly used organisms where alle genes are blocked for mutations. These files can be found [here](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files). 
 
 Species | RMT | GFF
 --- | --- | ---
@@ -99,7 +99,7 @@ Drosophila melanogaster | [Drosophila_melanogaster.rmt](https://github.com/mkpyt
 Homo sapiens | [Homo_sapiens.rmt](https://raw.githubusercontent.com/mkpython3/Mutation-Simulator/master/Example%20RMT%20files/Homo_sapiens.rmt) | [gencode.v34.annotation.gff3.gz](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.annotation.gff3.gz)
 Mus musculus | [Mus_musculus](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Mus_musculus.rmt) | [Mus_musculus.GRCm38.100.gff3.gz](ftp://ftp.ensembl.org/pub/release-100/gff3/mus_musculus/Mus_musculus.GRCm38.100.gff3.gz)
 
-More details about how these files were created can be found in the Workflows section.
+More details about [how these files were created](https://github.com/mkpython3/Mutation-Simulator#gff3-to-rmt) can be found in the Workflows section.
 
 ## Installation
 * Download or clone this repository
