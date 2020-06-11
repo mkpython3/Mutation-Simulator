@@ -88,6 +88,18 @@ This RMT file should contain all the information needed for Mutation-Simulator t
 
 To learn more about RMT files read the [RMT Docs](https://github.com/mkpython3/Mutation-Simulator/blob/master/rmt-docs.pdf).
 To learn how to create RMT files read the Workflows section.
+
+For convenience, we created some ready-to-use example RMT files for commonly used organisms, which you can find [here](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files). 
+
+Name | Genome | Variation Source File
+--- | --- | ---
+Maus | MusMusculusXYZ mit Link | MäuseGFF mit Link
+ |  | 
+ |  | 
+ |  | 
+
+More details about how these files were created can be found in the Workflows section.
+
 ## Installation
 * Download or clone this repository
 * (Recommended) Use the provided environment.yml to create a conda enviroment to automatically install all dependencies. Otherwise install the dependencies manually.
@@ -268,6 +280,8 @@ Coming soon
 
 ### GFF3 to RMT
 As a basic use case example we want to block all genes listed in a GFF3 file from mutating and only establish SNPs between genes at Rate X. For this we provide an [example script](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/gff3_genes_2_rmt.py) that can be used as a base to derive the scripts for other use cases. The basic idea is to filter alls GFF lines by the type column (3rd column) and extract the start and end position (4th and 5th column) of all genes. These intervals will then be blocked in the [output RMT files](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files).
+The script can be run with:
+'''CODE'''
 
 ## Polyploid Mutations
 ### VCF Merge
@@ -324,7 +338,7 @@ Program | Parameters | Runtime [s]
 Mutation-Simulator | 10Mb.fa args -sn 0.01 -in 0.005 -de 0.005 | 7
 simuG | -refseq 10Mb.fa -snp_count 100000 -indel_count 100000 -prefix output_prefix | 47497
 Mutation-Simulator | 10Mb.fa args -sn 0.1 -in 0.05 -de 0.05 | 47
-simuG | -refseq 10Mb.fa -snp_count 1000000 -indel_count 1000000 -prefix output_prefix | still calculating
+simuG | -refseq 10Mb.fa -snp_count 1000000 -indel_count 1000000 -prefix output_prefix | aborted after several days
 
 Testing Platform: Solus
 Processor: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
