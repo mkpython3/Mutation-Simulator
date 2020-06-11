@@ -279,9 +279,11 @@ java -jar GenomeAnalysisTK.jar -T SelectVariants -R reference.fasta -V input.vcf
 Coming soon
 
 ### GFF3 to RMT
-As a basic use case example we want to block all genes listed in a GFF3 file from mutating and only establish SNPs between genes at Rate X. For this we provide an [example script](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/gff3_genes_2_rmt.py) that can be used as a base to derive the scripts for other use cases. The basic idea is to filter alls GFF lines by the type column (3rd column) and extract the start and end position (4th and 5th column) of all genes. These intervals will then be blocked in the [output RMT files](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files).
+As a basic use case example we want to block all genes listed in a GFF3 file from mutating and only establish SNPs between genes at Rate X. For this we provide an [example script](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/gff3_genes_2_rmt.py) that can be used as a base to derive the scripts for other use cases. The basic idea is to filter alls GFF lines by the type column (3rd column) and extract the start and end position (4th and 5th column) of all genes. These intervals will then be blocked in the [output RMT files](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files).  
 The script can be run with:
-'''CODE'''
+```sh
+python3 gff3_genes_2_rmt.py [gff_file] [rate]
+```
 
 ## Polyploid Mutations
 ### VCF Merge
