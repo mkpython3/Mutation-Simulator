@@ -14,7 +14,7 @@ ___
 + Added example RMT files for Human, Mouse, Zebrafish, Arabidopsis and Drosophila
 + Added GFF3 to RMT section under Workflows
 ### Version 2.0.1
-+ complete rewrite of IT mode
++ fixed blocking of bases not working correctly
 ___
 
 ## Motivation
@@ -91,12 +91,13 @@ To learn how to create RMT files read the Workflows section.
 
 For convenience and as examples, [we created](https://github.com/mkpython3/Mutation-Simulator#gff3-to-rmt) some ready-to-use example RMT files for commonly used organisms where alle genes are blocked for mutations. These files can be found [here](https://github.com/mkpython3/Mutation-Simulator/tree/master/Example%20RMT%20files). 
 
-Name | Genome | Variation Source File
+Species | RMT | GFF
 --- | --- | ---
-Maus | MusMusculusXYZ mit Link | MäuseGFF mit Link
- |  | 
- |  | 
- |  | 
+Arabidopsis_thaliana | [Arabidopsis_thaliana.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Arabidopsis_thaliana.rmt) | [TAIR10_GFF3_genes.gff](https://www.arabidopsis.org/download_files/Genes/TAIR10_genome_release/TAIR10_gff3/TAIR10_GFF3_genes.gff)
+Danio rerio | [Danio_rerio.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Danio_rerio.rmt) | [Danio_rerio.GRCz11.100.gff3.gz](ftp://ftp.ensembl.org/pub/release-100/gff3/danio_rerio/Danio_rerio.GRCz11.100.gff3.gz)
+Drosophila melanogaster | [Drosophila_melanogaster.rmt](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Drosophila_melanogaster.rmt) | [Drosophila_melanogaster.BDGP6.28.100.gff3.gz](ftp://ftp.ensembl.org/pub/release-100/gff3/drosophila_melanogaster/Drosophila_melanogaster.BDGP6.28.100.gff3.gz)
+Homo sapiens | [Homo_sapiens.rmt](https://raw.githubusercontent.com/mkpython3/Mutation-Simulator/master/Example%20RMT%20files/Homo_sapiens.rmt) | [gencode.v34.annotation.gff3.gz](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.annotation.gff3.gz)
+Mus musculus | [Mus_musculus](https://github.com/mkpython3/Mutation-Simulator/blob/master/Example%20RMT%20files/Mus_musculus.rmt) | [Mus_musculus.GRCm38.100.gff3.gz](ftp://ftp.ensembl.org/pub/release-100/gff3/mus_musculus/Mus_musculus.GRCm38.100.gff3.gz)
 
 More details about how these files were created can be found in the Workflows section.
 
