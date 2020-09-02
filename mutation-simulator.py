@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Mutation-Simulator Version 2.0.2
+# Mutation-Simulator Version 2.0.3
 # Copyright (C) 2019 Marius Kühl
 
 # This program is free software: you can redistribute it and/or modify
@@ -38,7 +38,6 @@ def main():
 	if not filename:
 		return False
 	fasta = read_fasta(filename)  # returns pyfaidx's fasta
-	print(len(fasta))
 	if not fasta:
 		return False
 	fai = read_fai(filename)
@@ -768,8 +767,8 @@ def parse_rmt(rmt):
 						range_definitions[-1][1][-1][2] = None
 						range_definitions[-1][1][-1][3] = None
 			elif line[0].lower() == "it":
-				it_flag = True
 				if not line[1].lower() == "none":
+					it_flag = True
 					range_definitions[-1].append(float(line[1]))
 				else:
 					range_definitions[-1].append(None)
@@ -844,7 +843,7 @@ def set_missing_chr_2_std(rd, chr_count, rates_std, max_lengs_std):
 
 
 def add_missing_its(rd, it_std):
-	"""Adss missing interchromosomal translocation rates in the rd section."""
+	"""Adds missing interchromosomal translocation rates in the rd section."""
 	for i in range(len(rd)):
 		if len(rd[i]) < 2:
 			rd[i].append(it_std)
@@ -878,8 +877,7 @@ def add_missing_ranges_as_std(rd, fai, rates_std, max_lengs_std):
 			while n < len(rd[i][0]):
 				if n < len(rd[i][0]) - 1:
 					if not rd[i][0][n][0][1] + 1 == rd[i][0][n + 1][0][0]:
-						rd[i][0].insert(n + 1, [[rd[i][0][n][0][1] + 1, rd[i][n + 1][0][0] - 1], rates_std[0], max_lengs_std,
-											 rates_std[1]])
+						rd[i][0].insert(n + 1, [[rd[i][0][n][0][1] + 1, rd[i][0][n + 1][0][0] - 1], rates_std[0], max_lengs_std, rates_std[1]])
 						n = n + 1
 				else:
 					if rd[i][0][n][0][1] < fai.index[keys[i]].rlen - 1:
