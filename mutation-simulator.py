@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Mutation-Simulator Version 2.0.3
+# Mutation-Simulator Version min-mut-len-1
 # Copyright (C) 2019 Marius Kühl
 
 # This program is free software: you can redistribute it and/or modify
@@ -45,7 +45,8 @@ def main():
 		return False
 	if rmt:
 		rmt, mut_flag, it_flag, species_name, assembly_name, sample_name, mut_block, titv = load_rmt(rmt, fai, filename, ignore_warnings)
-		if not rmt: return False
+		if not rmt:
+			return False
 	else:
 		rmt, mut_flag, it_flag = None, None, None
 	if mut_rates or mut_flag:
@@ -68,7 +69,7 @@ def main():
 	sec = datetime.timedelta(seconds=runtime)
 	d = datetime.datetime(1, 1, 1) + sec
 	print("\nMutation-Simulator finished in: " + str(runtime) + "s -> %dh %dm %ds" % (d.hour, d.minute, d.second))
-	return
+	return True
 
 
 def read_fai(filename):
@@ -125,7 +126,7 @@ def mutator(fasta, fai, mut_rates, mut_lengs, mut_block, rmt, outfile_basename, 
 				if rmt[i][0][n][1]:
 					range_mut_list = get_mutations(rmt[i][0][n][0][0], rmt[i][0][n][0][1], rmt[i][0][n][1],
 												   rmt[i][0][n][2], mut_block)
-					if range_mut_list:
+					if range_mut_list[0]:
 						mut_list = mut_list + range_mut_list[0]
 						translocations = translocations + range_mut_list[1]
 						blocked_positions.update(range_mut_list[2])
@@ -211,6 +212,7 @@ def utilise_sysargs():
 	parser_args.add_argument("-tlb", "--translocationblock", help="Amount of bases blocked after translocations. Default = 1", type=int, default=1)
 	parser_args.add_argument("-a", "--assembly", help="Assembly name for the VCF file. Default = 'Unknown'", default="Unknown")
 	parser_args.add_argument("-s", "--species", help="Species name for the VCF file. Default = 'Unknown'", default="Unknown")
+	parser_args.add_argument("-n", "--sample", help="Sample name for the VCF file", default="SAMPLE")
 	parser_it = subparsers.add_parser("it", help="Generate interchromosomal translocations via commandline")
 	parser_it.add_argument("interchromosomalrate", help="Rate of interchromosomal translocations.", type=float)
 	args = parser.parse_args()
@@ -232,12 +234,18 @@ def utilise_sysargs():
 		mut_lengs = {"min": {"in": args.insertminlength, "de": args.deletionminlength, "iv": args.inversionminlength, "du": args.duplicationminlength, "tl": args.translocationminlength}, "max":{"in": args.insertmaxlength, "de": args.deletionmaxlength, "iv": args.inversionmaxlength, "du": args.duplicationmaxlength, "tl": args.translocationmaxlength}}
 		for typ in ["in", "de", "iv", "du", "tl"]:
 			if mut_lengs["min"][typ] > mut_lengs["max"][typ]:
-				print(f"ERROR: Minimum length for {typ} > maximum length.")
-				return False, False, False, False, False, False, False, False, False, False
+				print(f"ERROR: Minimum length for '{typ}' > maximum length.")
+				return False, False, False, False, False, False, False, False, False, False, False, False
+			if typ != "iv" and mut_lengs["min"][typ] < 1:
+				print(f"ERROR: Minimum length for '{typ}' < 1.")
+				return False, False, False, False, False, False, False, False, False, False, False, False
+			if typ == "iv" and mut_lengs["min"][typ] < 2:
+				print(f"ERROR: Minimum length for '{typ}' < 2.")
+				return False, False, False, False, False, False, False, False, False, False, False, False
 		mut_block = {"sn": args.snpblock, "in": args.insertblock, "de": args.deletionblock, "iv": args.inversionblock,
 					 "du": args.duplicationblock, "tl": args.translocationblock}
 		for key in mut_block.keys():
-			if mut_block[key] < 1: mut_block[key]=1 ; print(f"{key} block value was set to 1")
+			if mut_block[key] < 1: mut_block[key] = 1 ; print(f"'{key}' block value was set to 1")
 		assembly_name = args.assembly
 		species_name = args.species
 		sample_name = args.sample
@@ -338,7 +346,6 @@ def save_mutations_vcf(vcf_name, ref_filename, fasta, chromosome, mut_list, asse
 		if too_long:
 			start, ref, alt, info = len(fasta[chromosome]), convert_ambiguous(fasta[chromosome][len(fasta[chromosome]) - 1]), convert_ambiguous(fasta[chromosome][len(fasta[chromosome]) - 1] + too_long), f"SVTYPE=INS:ME;END={len(fasta[chromosome]) + len(too_long)};SVLEN={len(too_long)}"
 			hndl.write(f"{fasta[chromosome].name}\t{start}\t.\t{ref}\t{alt}\t.\t.\t{info}\tGT\t1\n")
-	return
 
 
 def fix_too_long(tl):
@@ -588,7 +595,7 @@ def interchromosomal_transloc(fasta, rate, rmt):
 	partners={}
 	for key in fasta.keys():
 		records.append(blist(fasta[key][:]))
-	for i in range(len(records)): changes[i]=[]
+	for i in range(len(records)): changes[i] = []
 	if rmt:
 		for i in range(len(rmt)):
 			if rmt[i][1] == None:
@@ -660,9 +667,9 @@ def sublists_empty(lists):
 
 def subdicts_empty(dict):
 	"""Returns True if every 'self' dict key in subdicts is empty."""
-	is_empty=True
+	is_empty = True
 	for subdict in dict:
-		if dict[subdict]["self"]: is_empty=False
+		if dict[subdict]["self"]: is_empty = False
 	return is_empty
 
 
@@ -689,18 +696,75 @@ def load_rmt(rmt_file, fai, filename, ignore_warnings):
 	print("Loading RMT")
 	rmt = read_rmt(rmt_file)
 	if rmt:
-		range_definitions, rates_std, max_lengs_std, it_std, mut_flag, it_flag, meta= parse_rmt(rmt)
+		range_definitions, rates_std, lengs_std, it_std, mut_flag, it_flag, meta= parse_rmt(rmt)
 		passed, species_name, assembly_name, sample_name, mut_block, titv=rmt_meta_check(meta, filename, ignore_warnings)
+		if not check_lengs_std(rates_std, lengs_std):
+			passed = False
+		if not check_lengs_rd(range_definitions):
+			passed = False
+		if not check_chr_exists(range_definitions, fai.index):
+			passed = False
 		if passed:
-			range_definitions = set_missing_chr_2_std(range_definitions, len(fai.index), rates_std, max_lengs_std)
+			range_definitions = set_missing_chr_2_std(range_definitions, len(fai.index), rates_std, lengs_std)
 			range_definitions = add_missing_its(range_definitions, it_std)
 			range_definitions = convert_ranges(range_definitions, fai)
-			range_definitions = add_missing_ranges_as_std(range_definitions, fai, rates_std, max_lengs_std)
+			range_definitions = add_missing_ranges_as_std(range_definitions, fai, rates_std, lengs_std)
 		else:
 			return None, None, None, None, None, None, None, None
 	else:
 		return None, None, None, None, None, None, None, None
 	return range_definitions, mut_flag, it_flag, species_name, assembly_name, sample_name, mut_block, titv
+
+
+def check_lengs_std(rates_std, lengs_std):
+	for typ in rates_std[0].keys():
+		if typ not in lengs_std["min"]:
+			print(f"ERROR: Minimum length for '{typ}' is missing in std.")
+			return False
+		if typ not in lengs_std["max"]:
+			print(f"ERROR: Maximum length for '{typ}' is missing in std.")
+			return False
+		if lengs_std["min"][typ] > lengs_std["max"][typ]:
+			print(f"ERROR: Minimum length for '{typ}' > maximum length in std.")
+			return False
+		if typ != "iv" and lengs_std["min"][typ] < 1:
+			print(f"ERROR: Minimum length for '{typ}' < 1 in std.")
+			return False
+		if typ == "iv" and lengs_std["min"][typ] < 2:
+			print(f"ERROR: Minimum length for '{typ}' < 2 in std.")
+			return False
+	return True
+
+
+def check_lengs_rd(rd):
+	for chr in rd:
+		for rng in chr[1]:
+			for typ in rng[1].keys():
+				if typ not in rng[2]["min"]:
+					print(f"ERROR: Minimum length for '{typ}' is missing in range {rng[0]} on chr {chr[0]}.")
+					return False
+				if typ not in rng[2]["max"]:
+					print(f"ERROR: Maximum length for '{typ}' is missing in range {rng[0]} on chr {chr[0]}.")
+					return False
+				if rng[2]["min"][typ] > rng[2]["max"][typ]:
+					print(f"ERROR: Minimum length for '{typ}' > maximum length in range {rng[0]} on chr {chr[0]}.")
+					return False
+				if typ != "iv" and rng[2]["min"][typ] < 1:
+					print(f"ERROR: Minimum length for '{typ}' < 1 in range {rng[0]} on chr {chr[0]}.")
+					return False
+				if typ == "iv" and rng[2]["min"][typ] < 2:
+					print(f"ERROR: Minimum length for '{typ}' < 2 in range {rng[0]} on chr {chr[0]}.")
+					return False
+	return True
+
+
+def check_chr_exists(rd, fai):
+	chroms = list(fai.keys())
+	for chr in rd:
+		if len(chroms) < int(chr[0]):
+			print(f"ERROR: Fasta only has {len(chroms)} sequence/s. Chr index {chr[0]} in RMT is out of range.")
+			return False
+	return True
 
 
 def read_rmt(file):
@@ -725,11 +789,12 @@ def parse_rmt(rmt):
 	"""Parses an RMT file."""
 	meta={}
 	rates_std = [{}, False]
-	max_lengs_std = {}
+	lengs_std = {"min": {}, "max": {}}
 	range_definitions = []
 	it_std = False
 	rate_indicators = ["sn", "in", "de", "iv", "du", "tl"]
-	leng_indicators = ["inl", "del", "ivl", "dul", "tll"]
+	max_leng_indicators = ["inmax", "demax", "ivmax", "dumax", "tlmax"]
+	min_leng_indicators = ["inmin", "demin", "ivmin", "dumin", "tlmin"]
 	flag = 0
 	mut_flag=False
 	it_flag=False
@@ -751,8 +816,10 @@ def parse_rmt(rmt):
 						rates_std[0][line[n]] = float(line[n + 1]) / 2  # half the tl rate
 					else:
 						rates_std[0][line[n]] = float(line[n + 1])
-				elif line[n].lower() in leng_indicators:
-					max_lengs_std[line[n][:2]] = int(line[n + 1])
+				elif line[n].lower() in max_leng_indicators:
+					lengs_std["max"][line[n][:2]] = int(line[n + 1])
+				elif line[n].lower() in min_leng_indicators:
+					lengs_std["min"][line[n][:2]] = int(line[n + 1])
 				elif line[n].lower() == "it":
 					if not line[n + 1].lower() == "none":
 						it_flag=True
@@ -761,10 +828,10 @@ def parse_rmt(rmt):
 						it_std = None
 				elif line[n].lower() == "None":
 					rates_std = None
-					max_lengs_std = None
+					lengs_std = None
 		elif flag == 2 and not line[0].lower() == "chr":
 			if not line[0].startswith("it"):
-				range_definitions[-1][1].append([line[0], {}, {}, False])  # chr mutrates mutlen tlinsertsflag
+				range_definitions[-1][1].append([line[0], {}, {"min": {}, "max": {}}, False])  # chr mutrates mutlen tlinsertsflag
 				for n in range(0, len(line)):
 					if line[n].lower() in rate_indicators:
 						mut_flag=True
@@ -773,8 +840,10 @@ def parse_rmt(rmt):
 							range_definitions[-1][1][-1][1][line[n]] = float(line[n + 1]) / 2
 						else:
 							range_definitions[-1][1][-1][1][line[n]] = float(line[n + 1])
-					elif line[n].lower() in leng_indicators:
-						range_definitions[-1][1][-1][2][line[n][:2]] = float(line[n + 1])
+					elif line[n].lower() in min_leng_indicators:
+						range_definitions[-1][1][-1][2]["min"][line[n][:2]] = float(line[n + 1])
+					elif line[n].lower() in max_leng_indicators:
+						range_definitions[-1][1][-1][2]["max"][line[n][:2]] = float(line[n + 1])
 					elif line[n].lower() == "none":
 						range_definitions[-1][1][-1][1] = None
 						range_definitions[-1][1][-1][2] = None
@@ -790,7 +859,7 @@ def parse_rmt(rmt):
 		if line[0].lower() == "chr":
 			range_definitions.append([line[1], []])
 			flag = 2
-	return range_definitions, rates_std, max_lengs_std, it_std, mut_flag, it_flag, meta
+	return range_definitions, rates_std, lengs_std, it_std, mut_flag, it_flag, meta
 
 
 def rmt_meta_check(meta,filename,ignore_warnings):
@@ -802,7 +871,7 @@ def rmt_meta_check(meta,filename,ignore_warnings):
 		if "fasta" in meta.keys():
 			if not meta["fasta"]==filename.split("/")[-1]:
 				yn = input("Fastaname does not match rmt, ignore? [y/n]")
-				if not yn.lower() == "y": check=False
+				if not yn.lower() == "y": check = False
 		if "md5" in meta.keys():
 			if not get_md5(filename)==meta["md5"]:
 				yn = input("The fasta's md5-hash does not match rmt, ignore? [y/n]")
@@ -843,7 +912,7 @@ def get_md5(filename):
 	return hash_md5.hexdigest()
 
 
-def set_missing_chr_2_std(rd, chr_count, rates_std, max_lengs_std):
+def set_missing_chr_2_std(rd, chr_count, rates_std, lengs_std):
 	"""Sets all mssing chromosomes to standard in an RMT."""
 	chr_contigs = []
 	for i in range(0, len(rd)):
@@ -851,7 +920,7 @@ def set_missing_chr_2_std(rd, chr_count, rates_std, max_lengs_std):
 		rd[i].pop(0)
 	chr_contigs = set(range(0, chr_count)) - set(chr_contigs)  # missing chrs
 	for chromosome in chr_contigs:
-		rd.insert(chromosome, [[["1-END",rates_std[0], max_lengs_std, rates_std[1]]]])
+		rd.insert(chromosome, [[["1-END",rates_std[0], lengs_std, rates_std[1]]]])
 	return rd
 
 
@@ -877,27 +946,27 @@ def convert_ranges(rd, fai):
 	return rd
 
 
-def add_missing_ranges_as_std(rd, fai, rates_std, max_lengs_std):
+def add_missing_ranges_as_std(rd, fai, rates_std, lengs_std):
 	"""Adds all missing ranges and sets them to standard in an RMT."""
 	keys = list(fai.index.keys())
 	for i in range(0, len(rd)):
 		if not rd[i][0]:
-			rd[i][0].append([[0, fai.index[keys[i]].rlen - 1], rates_std[0], max_lengs_std, rates_std[1]])
+			rd[i][0].append([[0, fai.index[keys[i]].rlen - 1], rates_std[0], lengs_std, rates_std[1]])
 		else:
 			if not rd[i][0][0][0][0] == 0:
-				rd[i][0].insert(0, [[0, rd[i][0][0][0][0] - 1], rates_std[0], max_lengs_std, rates_std[1]])
+				rd[i][0].insert(0, [[0, rd[i][0][0][0][0] - 1], rates_std[0], lengs_std, rates_std[1]])
 			n = 0
 			while n < len(rd[i][0]):
 				if n < len(rd[i][0]) - 1:
 					if not rd[i][0][n][0][1] + 1 == rd[i][0][n + 1][0][0]:
-						rd[i][0].insert(n + 1, [[rd[i][0][n][0][1] + 1, rd[i][0][n + 1][0][0] - 1], rates_std[0], max_lengs_std, rates_std[1]])
-						n = n + 1
+						rd[i][0].insert(n + 1, [[rd[i][0][n][0][1] + 1, rd[i][0][n + 1][0][0] - 1], rates_std[0], lengs_std, rates_std[1]])
+						n += 1
 				else:
 					if rd[i][0][n][0][1] < fai.index[keys[i]].rlen - 1:
-						rd[i][0].insert(n + 1, [[rd[i][0][n][0][1] + 1, fai.index[keys[i]].rlen - 1], rates_std[0], max_lengs_std,
+						rd[i][0].insert(n + 1, [[rd[i][0][n][0][1] + 1, fai.index[keys[i]].rlen - 1], rates_std[0], lengs_std,
 											 rates_std[1]])
-						n = n + 1
-				n = n + 1
+						n += 1
+				n += 1
 	return rd
 
 
@@ -924,7 +993,7 @@ def mutate(fasta, mut_list, titv):
 			del(data[mut_list[i][1]:mut_list[i][2]+1])
 		elif mut_list[i][0] == "iv":
 			invert = blist(data[mut_list[i][1]:mut_list[i][2] + 1])
-			del (data[mut_list[i][1]:mut_list[i][2] + 1])
+			del(data[mut_list[i][1]:mut_list[i][2] + 1])
 			data=data[:mut_list[i][1]] + invert[::-1] +data[mut_list[i][1]:]
 			mut_list[i].append("".join(invert))
 		elif mut_list[i][0] == "du":
