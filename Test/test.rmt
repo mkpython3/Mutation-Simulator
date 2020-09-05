@@ -1,6 +1,6 @@
 fasta=test.fa
-species name=Test species
-assembly name=Testassembly
+species_name=Test species
+assembly_name=Testassembly
 md5=b5054b21d7046a081a27aee79657ac3d
 
 std
