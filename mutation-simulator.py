@@ -718,43 +718,46 @@ def load_rmt(rmt_file, fai, filename, ignore_warnings):
 
 def check_lengs_std(rates_std, lengs_std):
 	for typ in rates_std[0].keys():
-		if typ not in lengs_std["min"]:
-			print(f"ERROR: Minimum length for '{typ}' is missing in std.")
-			return False
-		if typ not in lengs_std["max"]:
-			print(f"ERROR: Maximum length for '{typ}' is missing in std.")
-			return False
-		if lengs_std["min"][typ] > lengs_std["max"][typ]:
-			print(f"ERROR: Minimum length for '{typ}' > maximum length in std.")
-			return False
-		if typ != "iv" and lengs_std["min"][typ] < 1:
-			print(f"ERROR: Minimum length for '{typ}' < 1 in std.")
-			return False
-		if typ == "iv" and lengs_std["min"][typ] < 2:
-			print(f"ERROR: Minimum length for '{typ}' < 2 in std.")
-			return False
+		if typ != "sn":
+			if typ not in lengs_std["min"]:
+				print(f"ERROR: Minimum length for '{typ}' is missing in std.")
+				return False
+			if typ not in lengs_std["max"]:
+				print(f"ERROR: Maximum length for '{typ}' is missing in std.")
+				return False
+			if lengs_std["min"][typ] > lengs_std["max"][typ]:
+				print(f"ERROR: Minimum length for '{typ}' > maximum length in std.")
+				return False
+			if typ != "iv" and lengs_std["min"][typ] < 1:
+				print(f"ERROR: Minimum length for '{typ}' < 1 in std.")
+				return False
+			if typ == "iv" and lengs_std["min"][typ] < 2:
+				print(f"ERROR: Minimum length for '{typ}' < 2 in std.")
+				return False
 	return True
 
 
 def check_lengs_rd(rd):
 	for chr in rd:
 		for rng in chr[1]:
-			for typ in rng[1].keys():
-				if typ not in rng[2]["min"]:
-					print(f"ERROR: Minimum length for '{typ}' is missing in range {rng[0]} on chr {chr[0]}.")
-					return False
-				if typ not in rng[2]["max"]:
-					print(f"ERROR: Maximum length for '{typ}' is missing in range {rng[0]} on chr {chr[0]}.")
-					return False
-				if rng[2]["min"][typ] > rng[2]["max"][typ]:
-					print(f"ERROR: Minimum length for '{typ}' > maximum length in range {rng[0]} on chr {chr[0]}.")
-					return False
-				if typ != "iv" and rng[2]["min"][typ] < 1:
-					print(f"ERROR: Minimum length for '{typ}' < 1 in range {rng[0]} on chr {chr[0]}.")
-					return False
-				if typ == "iv" and rng[2]["min"][typ] < 2:
-					print(f"ERROR: Minimum length for '{typ}' < 2 in range {rng[0]} on chr {chr[0]}.")
-					return False
+			if rng[1]:
+				for typ in rng[1].keys():
+					if typ !="sn":
+						if typ not in rng[2]["min"]:
+							print(f"ERROR: Minimum length for '{typ}' is missing in range {rng[0]} on chr {chr[0]}.")
+							return False
+						if typ not in rng[2]["max"]:
+							print(f"ERROR: Maximum length for '{typ}' is missing in range {rng[0]} on chr {chr[0]}.")
+							return False
+						if rng[2]["min"][typ] > rng[2]["max"][typ]:
+							print(f"ERROR: Minimum length for '{typ}' > maximum length in range {rng[0]} on chr {chr[0]}.")
+							return False
+						if typ != "iv" and rng[2]["min"][typ] < 1:
+							print(f"ERROR: Minimum length for '{typ}' < 1 in range {rng[0]} on chr {chr[0]}.")
+							return False
+						if typ == "iv" and rng[2]["min"][typ] < 2:
+							print(f"ERROR: Minimum length for '{typ}' < 2 in range {rng[0]} on chr {chr[0]}.")
+							return False
 	return True
 
 
