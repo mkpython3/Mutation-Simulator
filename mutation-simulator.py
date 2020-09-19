@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Mutation-Simulator Version min-mut-len-1
+# Mutation-Simulator Version min-mut-len-2
 # Copyright (C) 2019 Marius Kühl
 
 # This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from tqdm import trange
+from tqdm import tqdm
 from numpy.random import choice, random, randint
 from numpy import arange, setdiff1d, array
 from blist import blist
@@ -68,7 +68,7 @@ def main():
 	runtime = round(stop - start, 4)
 	sec = datetime.timedelta(seconds=runtime)
 	d = datetime.datetime(1, 1, 1) + sec
-	print("\nMutation-Simulator finished in: " + str(runtime) + "s -> %dh %dm %ds" % (d.hour, d.minute, d.second))
+	print(f"\nMutation-Simulator finished in: {runtime}s -> {d.hour}h {d.minute}m {d.second}s")
 	return True
 
 
@@ -116,7 +116,9 @@ def mutator(fasta, fai, mut_rates, mut_lengs, mut_block, rmt, outfile_basename, 
 		titv (float): Transition / Transversion ratio.
 	"""
 	chromosomes = list(fasta.keys())
-	for i in trange(len(chromosomes), desc="Mutating Sequences"):
+	has_written_flag = False
+	pbar = tqdm(total=len(chromosomes), desc="Mutating Sequences", position=0)
+	for i in range(len(chromosomes)):
 		no_tl_regions = []
 		if rmt:
 			mut_list = blist()
@@ -124,12 +126,14 @@ def mutator(fasta, fai, mut_rates, mut_lengs, mut_block, rmt, outfile_basename, 
 			blocked_positions = set()
 			for n in range(0, len(rmt[i][0])):
 				if rmt[i][0][n][1]:
-					range_mut_list = get_mutations(rmt[i][0][n][0][0], rmt[i][0][n][0][1], rmt[i][0][n][1],
-												   rmt[i][0][n][2], mut_block)
+					range_mut_list = get_mutations(rmt[i][0][n][0][0], rmt[i][0][n][0][1], rmt[i][0][n][1], rmt[i][0][n][2], mut_block)
 					if range_mut_list[0]:
-						mut_list = mut_list + range_mut_list[0]
-						translocations = translocations + range_mut_list[1]
-						blocked_positions.update(range_mut_list[2])
+						if range_mut_list[0] == -1:
+							no_tl_regions.append(range(rmt[i][0][n][0][0], rmt[i][0][n][0][1] + 1))
+						else:
+							mut_list = mut_list + range_mut_list[0]
+							translocations = translocations + range_mut_list[1]
+							blocked_positions.update(range_mut_list[2])
 					else:
 						return False
 					if not rmt[i][0][n][3]:
@@ -140,24 +144,36 @@ def mutator(fasta, fai, mut_rates, mut_lengs, mut_block, rmt, outfile_basename, 
 			mut_list, translocations, blocked_positions = get_mutations(0, len(fasta[chromosomes[i]])-1, mut_rates, mut_lengs, mut_block)
 			if not mut_list:
 				return False
-		if translocations:
-			mut_list = mut_list + get_trans_inserts(translocations, len(fasta[chromosomes[i]]), blocked_positions, no_tl_regions)
-		del translocations[:]
-		del translocations
-		del blocked_positions
-		mut_list.sort(key=lambda x: x[1], reverse=True)
-		record, mut_list = mutate(fasta[chromosomes[i]], mut_list, titv)
-		if not sublists_empty(mut_list):
-			if i == 0: mode = "w"
-			else: mode = "a"
-			write_fasta(outfile_basename + ".fa", record, fasta[chromosomes[i]].long_name, fai.index[chromosomes[i]].lenc, mode)
-			mut_list.sort(key=lambda x: x[1])
-			save_mutations_vcf(outfile_basename + ".vcf", ref_filename, fasta, chromosomes[i], mut_list, assembly_name, species_name, sample_name, mode)
-			del record
-			del mut_list[:]
-			del mut_list
+		if mut_list != -1:
+			if not sublists_empty(mut_list):
+				if translocations:
+					mut_list = mut_list + get_trans_inserts(translocations, len(fasta[chromosomes[i]]), blocked_positions, no_tl_regions)
+				del translocations[:]
+				del translocations
+				del blocked_positions
+				mut_list.sort(key=lambda x: x[1], reverse=True)
+				record, mut_list = mutate(fasta[chromosomes[i]], mut_list, titv)
+				if not has_written_flag:
+					mode = "w"
+				else: mode = "a"
+				write_fasta(outfile_basename + ".fa", record, fasta[chromosomes[i]].long_name, fai.index[chromosomes[i]].lenc, mode)
+				mut_list.sort(key=lambda x: x[1])
+				save_mutations_vcf(outfile_basename + ".vcf", ref_filename, fasta, chromosomes[i], mut_list, assembly_name, species_name, sample_name, mode)
+				has_written_flag = True
+				del record
+				del mut_list[:]
+				del mut_list
+			else:
+				chr_has_rates = False
+				for y in range(len(rmt[i][0])):
+					if rmt[i][0][y][1]:
+						chr_has_rates = True
+				if chr_has_rates:
+					pbar.write(f"WARNING: No mutations could be generated on sequence {i + 1}. (Mutation rate too low)")
 		else:
-			print("ERROR: No mutations could be generated.")
+			pbar.write(f"WARNING: No mutations could be generated on sequence {i + 1}. (Mutation rate too low)")
+		pbar.update(1)
+	pbar.close()
 	return True
 
 
@@ -299,7 +315,7 @@ def save_mutations_vcf(vcf_name, ref_filename, fasta, chromosome, mut_list, asse
 			hndl.write("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n")
 			hndl.write(f"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{sample}\n")
 		too_long = []
-		for i in trange(len(mut_list), desc="Writing VCF"):
+		for i in tqdm(range(len(mut_list)), desc="Writing VCF", position=1, leave=False):
 			entry = mut_list[i]
 			#start, ref, alt, info = "", "", "", ""
 			if entry[0] == "sn":
@@ -336,6 +352,7 @@ def save_mutations_vcf(vcf_name, ref_filename, fasta, chromosome, mut_list, asse
 						start, ref, alt, info = entry[1], convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]]), convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]] + insert), f"SVTYPE=INS:ME;END={entry[1]};SVLEN={len(insert)}"
 					else:
 						too_long.append(entry)
+						pbar.update(1)
 						continue
 				else:
 					start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][entry[1]]), convert_ambiguous(insert + fasta[chromosome][entry[1]]), f"SVTYPE=INS:ME;END={entry[1] + 1};SVLEN={len(insert)}"
@@ -392,11 +409,14 @@ def get_mutations(start, stop, mut_rates, mut_lengs, mut_block):
 		return False, False, False
 	mut_positions = get_mut_positions(start, stop, mut_rate)
 	if not mut_positions:
-		return False, False, False
+		if type(mut_positions) == list:
+			return -1, False, False
+		else:
+			return False, False, False
 	mutations = []
 	blocked_positions = blist([])
 	translocations = []
-	pbar = trange(len(mut_positions), desc=f"Finding mutations in range: {start+1}-{stop+1}")
+	pbar = tqdm(total=len(mut_positions), desc=f"Finding mutations in range: {start+1}-{stop+1}", position=1, leave=False)
 	i = 0
 	mut_types = [choice(mut_type_chances[0], p=mut_type_chances[1], size=len(mut_positions))]
 	while i < len(mut_positions):
@@ -477,13 +497,13 @@ def get_trans_inserts(translocations, data_length, blocked_positions, no_tl_regi
 	trans_inserts = []
 	if len(translocations) <= (data_length - len(blocked_positions)):
 		positions = choice(setdiff1d(arange(data_length), array(blocked_positions), True), len(translocations), replace=False)
-		for i in trange(len(translocations), desc="Finding transloc inserts"):
+		for i in tqdm(range(len(translocations)), desc="Finding transloc inserts", position = 1, leave=False):
 			trans_inserts.append(["tli", positions[i], translocations[i][1], translocations[i][2],
 								  transloc_invert((translocations[i][2] - translocations[i][1]) + 1)])
 	else:
 		positions = rnd.sample(set(range(0, data_length)) - set(blocked_positions), len(set(range(0, data_length)) - set(blocked_positions)))
 		rnd.shuffle(translocations)
-		for i in trange(len(translocations), desc="Finding transloc inserts"):
+		for i in tqdm(range(len(translocations)), desc="Finding transloc inserts", position = 1, leave=False):
 			if i < len(positions): # if i < len(set(range(0, data_length)) - set(blocked_positions)):
 				trans_inserts.append(["tli", positions[i], translocations[i][1], translocations[i][2],
 									  transloc_invert((translocations[i][2] - translocations[i][1]) + 1)])
@@ -662,7 +682,7 @@ def save_it_bedpe(filename, fasta, it_changes):
 
 def sublists_empty(lists):
 	"""Returns True if every sublist of a list is empty."""
-	return all(map(sublists_empty, lists)) if isinstance(lists, list) else False
+	return all(map(sublists_empty, lists)) if isinstance(lists, blist) else False
 
 
 def subdicts_empty(dict):
@@ -983,7 +1003,7 @@ def mutate(fasta, mut_list, titv):
 		titv (float): Transition / Transversion ratio.
 	"""
 	data = blist(fasta[:])
-	for i in trange(len(mut_list), desc="Mutating"):
+	for i in tqdm(range(len(mut_list)), desc="Mutating", position=1, leave=False):
 		if mut_list[i][0] == "sn":
 			alt = get_snp(data[mut_list[i][1]], titv)
 			data[mut_list[i][1]]=alt
@@ -1053,7 +1073,7 @@ def write_fasta(filename, chromosome, header, linebases, mode):
 	"""
 	with open(filename, mode) as hndl:
 		hndl.write(f">{header}\n")
-		for i in trange(0,len(chromosome),linebases,desc="Writing Sequence"):
+		for i in tqdm(range(0,len(chromosome),linebases), desc="Writing Sequence", position=1, leave=False):
 			hndl.write("".join(chromosome[i:i+linebases])+"\n")
 	return
 
