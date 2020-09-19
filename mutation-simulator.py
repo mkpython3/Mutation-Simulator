@@ -352,7 +352,6 @@ def save_mutations_vcf(vcf_name, ref_filename, fasta, chromosome, mut_list, asse
 						start, ref, alt, info = entry[1], convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]]), convert_ambiguous(fasta[chromosome][entry[1] - 1:entry[1]] + insert), f"SVTYPE=INS:ME;END={entry[1]};SVLEN={len(insert)}"
 					else:
 						too_long.append(entry)
-						pbar.update(1)
 						continue
 				else:
 					start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][entry[1]]), convert_ambiguous(insert + fasta[chromosome][entry[1]]), f"SVTYPE=INS:ME;END={entry[1] + 1};SVLEN={len(insert)}"
