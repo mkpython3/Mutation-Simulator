@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Mutation-Simulator Version min-mut-len-2
+# Mutation-Simulator Version min-mut-len-3
 # Copyright (C) 2019 Marius Kühl
 
 # This program is free software: you can redistribute it and/or modify
@@ -126,7 +126,7 @@ def mutator(fasta, fai, mut_rates, mut_lengs, mut_block, rmt, outfile_basename, 
 			blocked_positions = set()
 			for n in range(0, len(rmt[i][0])):
 				if rmt[i][0][n][1]:
-					range_mut_list = get_mutations(rmt[i][0][n][0][0], rmt[i][0][n][0][1], rmt[i][0][n][1], rmt[i][0][n][2], mut_block)
+					range_mut_list = get_mutations(rmt[i][0][n][0][0], rmt[i][0][n][0][1], len(fasta[chromosomes[i]])-1, rmt[i][0][n][1], rmt[i][0][n][2], mut_block)
 					if range_mut_list[0]:
 						if range_mut_list[0] == -1:
 							no_tl_regions.append(range(rmt[i][0][n][0][0], rmt[i][0][n][0][1] + 1))
@@ -141,7 +141,7 @@ def mutator(fasta, fai, mut_rates, mut_lengs, mut_block, rmt, outfile_basename, 
 				else:
 					no_tl_regions.append(range(rmt[i][0][n][0][0], rmt[i][0][n][0][1] + 1))
 		else:
-			mut_list, translocations, blocked_positions = get_mutations(0, len(fasta[chromosomes[i]])-1, mut_rates, mut_lengs, mut_block)
+			mut_list, translocations, blocked_positions = get_mutations(0, len(fasta[chromosomes[i]])-1, len(fasta[chromosomes[i]])-1, mut_rates, mut_lengs, mut_block)
 			if not mut_list:
 				return False
 		if mut_list != -1:
@@ -385,7 +385,7 @@ def convert_ambiguous(substring):
 		.replace("R", "A").replace("B", "C").replace("D", "A").replace("H", "A").replace("V", "A").replace("-", "N")
 
 
-def get_mutations(start, stop, mut_rates, mut_lengs, mut_block):
+def get_mutations(start, stop, data_length, mut_rates, mut_lengs, mut_block):
 	"""
 	Generates a list of mutations with translocations in a seperate list for a whole chromosome or RMT region.
 
@@ -394,6 +394,7 @@ def get_mutations(start, stop, mut_rates, mut_lengs, mut_block):
 	Parameters:
 		start (int): Startung position of the chromosome or region.
 		stop (int): Stop position of the chromosome or region.
+		data_length (int): Length of the sequence.
 		mut_rates (dict): All rates for all mutation types with 2 letter acronymes.
 		mut_lengs (dict): All mutation lengths settings for any mutation type.
 		mut_block (dict): The range of the blocked area after any mutation for all types of mutations.
@@ -420,7 +421,7 @@ def get_mutations(start, stop, mut_rates, mut_lengs, mut_block):
 	mut_types = [choice(mut_type_chances[0], p=mut_type_chances[1], size=len(mut_positions))]
 	while i < len(mut_positions):
 		i_before=i
-		mut = random_mutation_type(mut_positions[i], stop, mut_lengs, mut_types[0][i])
+		mut = random_mutation_type(mut_positions[i], data_length, mut_lengs, mut_types[0][i])
 		if mut:
 			mutations.append(mut)
 			if not mut[0] in ["sn", "in"]:
@@ -921,7 +922,10 @@ def rmt_meta_check(meta,filename,ignore_warnings):
 				mut_block[indicator] = int(meta[key])
 	for indicator in mut_indicator:
 		if indicator not in mut_block.keys():
-			mut_block[indicator] = 0
+			mut_block[indicator] = 1
+		elif mut_block[indicator] < 1:
+			mut_block[indicator] = 1
+			print(f"'{indicator}' block value was set to 1")
 	return check, species_name, assembly_name, sample_name, mut_block, titv
 
 
