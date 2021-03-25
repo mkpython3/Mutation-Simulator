@@ -808,7 +808,7 @@ def rmt_meta_check(meta,filename,ignore_warnings):
 	else:
 		sample_name = "SAMPLE"
 	if "titv" in meta.keys():
-		titv = meta["titv"]
+		titv = float(meta["titv"])
 	else:
 		titv = 1
 	for key in meta.keys():
