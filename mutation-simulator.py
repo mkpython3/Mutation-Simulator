@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Mutation-Simulator Version min-mut-len-3
+# Mutation-Simulator Version min-mut-len-4
 # Copyright (C) 2019 Marius Kühl
 
 # This program is free software: you can redistribute it and/or modify
@@ -337,7 +337,7 @@ def save_mutations_vcf(vcf_name, ref_filename, fasta, chromosome, mut_list, asse
 				else:
 					start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][0:entry[2] + 2]), convert_ambiguous(fasta[chromosome][entry[2] + 1]), f"SVTYPE={sv_type};END={entry[2] + 2};SVLEN=-{entry[2] - entry[1] + 1}"
 			elif entry[0] == "iv":
-				if str(fasta[chromosome][entry[1]:entry[2] + 1]) != str(entry[3][::-1]):
+				if str(fasta[chromosome][entry[1]:entry[2] + 1]) != str(entry[3]):
 					start, ref, alt, info = entry[1] + 1, convert_ambiguous(fasta[chromosome][entry[1]:entry[2] + 1]), convert_ambiguous(entry[3][::-1]), f"SVTYPE=INV;END={entry[2] + 1};SVLEN=0"
 				else:
 					continue
@@ -380,7 +380,7 @@ def fix_too_long(tl):
 
 
 def convert_ambiguous(substring):
-	"""Returns the inpur string with converted ambiguity codes"""
+	"""Returns the input string with converted ambiguity codes"""
 	return substring.replace("K", "G").replace("S", "C").replace("Y", "C").replace("M", "A").replace("W", "A")\
 		.replace("R", "A").replace("B", "C").replace("D", "A").replace("H", "A").replace("V", "A").replace("-", "N")
 
@@ -1006,6 +1006,7 @@ def mutate(fasta, mut_list, titv):
 		titv (float): Transition / Transversion ratio.
 	"""
 	data = blist(fasta[:])
+	comp = str.maketrans("ACGTUMRWSYKVHDB", "TGCAAKYWSRMBDHV")
 	for i in tqdm(range(len(mut_list)), desc="Mutating", position=1, leave=False):
 		if mut_list[i][0] == "sn":
 			alt = get_snp(data[mut_list[i][1]], titv)
@@ -1018,9 +1019,9 @@ def mutate(fasta, mut_list, titv):
 		elif mut_list[i][0] == "de" or mut_list[i][0] == "tl":
 			del(data[mut_list[i][1]:mut_list[i][2]+1])
 		elif mut_list[i][0] == "iv":
-			invert = blist(data[mut_list[i][1]:mut_list[i][2] + 1])
+			invert = blist("".join(data[mut_list[i][1]:mut_list[i][2] + 1])[::-1].translate(comp))
 			del(data[mut_list[i][1]:mut_list[i][2] + 1])
-			data=data[:mut_list[i][1]] + invert[::-1] +data[mut_list[i][1]:]
+			data = data[:mut_list[i][1]] + invert + data[mut_list[i][1]:]
 			mut_list[i].append("".join(invert))
 		elif mut_list[i][0] == "du":
 			dupe = blist(data[mut_list[i][1]:mut_list[i][2] + 1])
@@ -1029,9 +1030,8 @@ def mutate(fasta, mut_list, titv):
 		elif mut_list[i][0] == "tli":
 			insert = blist(fasta[mut_list[i][2]:mut_list[i][3] + 1])
 			if mut_list[i][4]:
-				data = data[:mut_list[i][1]] + insert[::-1] + data[mut_list[i][1]:]
-			else:
-				data = data[:mut_list[i][1]] + insert + data[mut_list[i][1]:]
+				insert = blist("".join(insert)[::-1].translate(comp))
+			data = data[:mut_list[i][1]] + insert + data[mut_list[i][1]:]
 			mut_list[i].append("".join(insert))
 	return data, mut_list
 
