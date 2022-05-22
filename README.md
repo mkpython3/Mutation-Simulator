@@ -1,5 +1,5 @@
 # Mutation-Simulator
-**Version 2.0.3**
+**Minimum Mutation Length Development Branch**
 
 Mutation-Simulator is a Python 3.7 tool for simulating SNPs and SVs in any reference genome with cohesive documentation about implemented mutations. With Mutation-Simulator, the new file format Random Mutation Tables (RMT) is introduced, which gives more simulation power to the user by creating an interface for more natural simulations within specific genomes.
 Mutation-Simulator provides 3 different modes to simulate SNPs, insertions, deletions, tandem duplications, inversions, translocations and interchromosomal translocations from the commandline or with highly configureable RMT files.
@@ -51,19 +51,24 @@ Option | Option | Description | Default
 -snb | -–snpblock | Amount of bases blocked after SNP | 1
 -titv | --transitiontransversion | Ratio of transitions / transversions | 1
 -in | -–insert | Rate of insertions | 0
--inl | -–insertlength | Maximum length of inserts | 2
+-inmin | -–insertminlength | Minimum length of inserts | 1
+-inmax | -–insertmaxlength | Maximum length of inserts | 2
 -inb | -–insertblock | Amount of bases blocked after insert | 1
 -de | -–deletion | Rate of deletions | 0
--del | -–deletionlength | Maximum length of deletions | 2
+-demin | -–deletionminlength | Minimum length of deletions | 1
+-demax | -–deletionmaxlength | Maximum length of deletions | 2
 -deb | -–deletionblock | Amount of bases blocked after deletion | 1
 -iv | -–inversion | Rate of inversions | 0
--ivl | -–inversionlength | Maximum length of inversion | 2
+-ivmin | -–inversionminlength | Minimum length of inversion | 2
+-ivmax | -–inversionmaxlength | Maximum length of inversion | 3
 -ivb | -–inversionblock | Amount of bases blocked after inversion | 1
 -du | -–duplication | Rate of duplications | 0
--dul | -–duplicationlength | Maximum length of duplications | 2
+-dumin | -–duplicationminlength | Minimum length of duplications | 1
+-dumax | -–duplicationmaxlength | Maximum length of duplications | 2
 -dub | -–duplicationblock | Amount of bases blocked after duplication | 1
 -tl | -–translocation | Rate of translocations | 0
--tll | -–translocationlength | Maximum length of translocations | 2
+-tlmin | -–translocationminlength | Minimum length of translocations | 1
+-tlmax | -–translocationmaxlength | Maximum length of translocations | 2
 -tlb | -–translocationblock | Amount of bases blocked after translocations | 1
 -a | -–assembly | Assembly name for the VCF file | "Unknown"
 -s | -–species | Species name for the VCF file | "Unknown"
