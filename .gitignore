@@ -1,0 +1,6 @@
+.pypirc
+.python-version
+Mutation_Simulator.egg-info
+__pycache__
+build
+dist
