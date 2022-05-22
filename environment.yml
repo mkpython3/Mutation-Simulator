@@ -1,7 +1,0 @@
-name: mutation-simulator
-dependencies:
-  - python=3.7.*
-  - tqdm
-  - blist
-  - numpy
-  - bioconda::pyfaidx
