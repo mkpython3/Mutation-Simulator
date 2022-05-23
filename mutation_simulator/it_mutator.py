@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 from random import choice, shuffle
-from sys import stderr
 from typing import TYPE_CHECKING, Tuple
 
-from tqdm import trange
+from tqdm import tqdm
 
 from .bedpe_writer import BedpeWriter
-from .colors import Colors
 from .fasta_writer import FastaWriter
-from .util import pairwise, sample_with_minimum_distance
+from .util import pairwise, print_warning, sample_with_minimum_distance
 
 if TYPE_CHECKING:
 	from argparse import Namespace
@@ -115,8 +113,9 @@ class ITMutator:
 					sample_with_minimum_distance(seq_len2, bp_amount, 1))
 		except ValueError:
 			if not self.__args.ignore_warnings:
-				print(f"{Colors.warn}WARNING: Interchromosomal translocation rate too high for sequence {chrom+1} and {self.__partners[chrom]+1}.{Colors.norm}",
-						file=stderr)
+				print_warning(
+						f"Interchromosomal translocation rate too high for sequence {chrom+1} and {self.__partners[chrom]+1}.",
+						self.__args.no_color)
 		return bp_chrom, bp_partner
 
 	def __write_with_bp(self, chrom: str, bp_chrom: list[int], chrom_len: int,
@@ -179,34 +178,40 @@ class ITMutator:
 				}
 			else:
 				if not self.__args.ignore_warnings:
-					print(f"{Colors.warn}WARNING: No interchromosomal translocations could be generated between sequence {chrom+1} and {self.__partners[chrom]+1} (it rates too low).{Colors.norm}",
-							file=stderr)
+					print_warning(
+							f"No interchromosomal translocations could be generated between sequence {chrom+1} and {self.__partners[chrom]+1} (it rates too low).",
+							self.__args.no_color)
 		return breakpoints
 
 	def __mutate_sequence(self, breakpoints: dict[int, dict[str, list[int]]]):
 		"""Executes the interchromosomal translocations and writes them out.
 		:param breakpoints: Dict of each chrom-partner breakpoint pairs
 		"""
-		for chrom in trange(len(self.__sim.chromosomes),
-				desc="IT Mutating Sequences"):
-			self.__fasta_writer.set_bpl(
-					self.__fasta.faidx.index[self.__fasta[chrom].name].lenc)
-			self.__fasta_writer.write_header(self.__fasta[chrom].long_name)
+		for chrom in tqdm(self.__sim.chromosomes,
+				desc="IT Mutating Sequences",
+				disable=self.__args.no_progress):
+			self.__fasta_writer.set_bpl(self.__fasta.faidx.index[self.__fasta[
+					chrom.number].name].lenc)
+			self.__fasta_writer.write_header(
+					self.__fasta[chrom.number].long_name)
 
-			if chrom in breakpoints:
-				self.__write_with_bp(self.__fasta[chrom].name,
-						breakpoints[chrom]["self"], len(self.__fasta[chrom]),
-						self.__fasta[self.__partners[chrom]].name,
-						breakpoints[chrom]["partner"],
-						len(self.__fasta[self.__partners[chrom]]))
+			if chrom.number in breakpoints:
+				self.__write_with_bp(
+						self.__fasta[chrom.number].name,
+						breakpoints[chrom.number]["self"],
+						len(self.__fasta[chrom.number]),
+						self.__fasta[self.__partners[chrom.number]].name,
+						breakpoints[chrom.number]["partner"],
+						len(self.__fasta[self.__partners[chrom.number]]))
 				self.__bedpe_writer.write(
-						self.__fasta[chrom].name, breakpoints[chrom]["self"],
-						len(self.__fasta[chrom]),
-						self.__fasta[self.__partners[chrom]].name,
-						breakpoints[chrom]["partner"],
-						len(self.__fasta[self.__partners[chrom]]))
+						self.__fasta[chrom.number].name,
+						breakpoints[chrom.number]["self"],
+						len(self.__fasta[chrom.number]),
+						self.__fasta[self.__partners[chrom.number]].name,
+						breakpoints[chrom.number]["partner"],
+						len(self.__fasta[self.__partners[chrom.number]]))
 			else:
-				self.__write_chrom_full(chrom)
+				self.__write_chrom_full(chrom.number)
 
 	def mutate(self):
 		"""Creates interchromosomal translocations using breakpoints

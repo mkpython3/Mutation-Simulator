@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from sys import stderr
 from typing import TYPE_CHECKING, Optional, Tuple
 
-from .colors import Colors
 from .defaults import Defaults
 from .mut_types import MutType
+from .util import print_warning
 
 if TYPE_CHECKING:
 	from argparse import Namespace
@@ -273,7 +272,8 @@ class SimulationSettings:
 			species_name: str = Defaults.SPECIES_NAME,
 			assembly_name: str = Defaults.ASSEMBLY_NAME,
 			sample_name: str = Defaults.SAMPLE_NAME,
-			ignore_warnings: bool = Defaults.IGNORE_WARNINGS):
+			ignore_warnings: bool = Defaults.IGNORE_WARNINGS,
+			no_color: bool = Defaults.NO_COLOR):
 		"""Constructor.
 		:param std: Standard MutationSettings
 		:param std_it: Standard interchromosomal translocation rate or None
@@ -286,12 +286,13 @@ class SimulationSettings:
 		:param assembly_name: Name of the assembly
 		:param sample_name: Name of the sample
 		:param ignore_warnings: Supresses warnings
+		:param no_color: Disables color
 		"""
 		self.__std = std
 		self.__std_it = std_it
 		self.chromosomes = chromosomes
 		self.mut_block = mut_block
-		self.__validate_mut_block(ignore_warnings)
+		self.__validate_mut_block(ignore_warnings, no_color)
 		self.fasta: Optional[Path] = fasta
 		self.md5: Optional[str] = md5
 		self.titv: float = titv
@@ -322,9 +323,10 @@ class SimulationSettings:
 			raise ItRateTooLowError(
 					"Interchromosomal translocation rates are too low")
 
-	def __validate_mut_block(self, ignore_warnings: bool):
+	def __validate_mut_block(self, ignore_warnings: bool, no_color: bool):
 		"""Checks if the mutation block values are valid. Adjusts to 1 if lower.
 		:param ignore_warnings: Supresses warnings
+		:param no_color: Disables color
 		"""
 		if self.mut_block:
 			for mut_type in MutType:
@@ -334,8 +336,9 @@ class SimulationSettings:
 					elif self.mut_block[mut_type] < 1:
 						self.mut_block[mut_type] = 1
 						if not ignore_warnings:
-							print(f"{Colors.warn}WARNING: '{mut_type.name}' block was set to 1{Colors.norm}",
-									file=stderr)
+							print_warning(
+									f"'{mut_type.name}' block was set to 1",
+									no_color)
 			# tli will never be set by user
 			self.mut_block[MutType.TLI] = self.mut_block[MutType.TL]
 		else:

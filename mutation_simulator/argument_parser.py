@@ -45,10 +45,28 @@ def get_args() -> "Namespace":
 			help="Path/Basename for the output files (without file extension)",
 			default=Defaults.OUTBASE,
 			dest="outbase")
-	parser.add_argument("--ignore-warnings",
+	parser.add_argument("-w",
+			"--ignore-warnings",
 			help="Silences warnings",
 			action='store_true',
 			default=Defaults.IGNORE_WARNINGS)
+	parser.add_argument("-c",
+			"--no-color",
+			help="Always disable color",
+			action='store_true',
+			default=Defaults.NO_COLOR)
+	parser.add_argument(
+			"-p",
+			"--no-progress",
+			help="Disable progressbars",
+			action='store_true',
+			default=Defaults.NO_PROGRESS,
+	)
+	parser.add_argument("-q",
+			"--quiet",
+			help="Disable all output except errors",
+			action='store_true',
+			default=Defaults.QUIET)
 	parser.add_argument("-v",
 			"--version",
 			action="version",
@@ -59,10 +77,6 @@ def get_args() -> "Namespace":
 			"Generate mutations or interchromosomal translocations via RMT or arguments"
 										)
 	subparsers.required = True
-
-	parser_rmt = subparsers.add_parser("rmt",
-			help="Use random mutation table instead of arguments")
-	parser_rmt.add_argument("rmtfile", type=Path, help="Path to the RMT file")
 
 	parser_args = subparsers.add_parser("args",
 			help="Use commandline arguments for mutations instead of RMT")
@@ -212,6 +226,15 @@ def get_args() -> "Namespace":
 	parser_it.add_argument("interchromosomalrate",
 			help="Rate of interchromosomal translocations",
 			type=float)
+
+	parser_rmt = subparsers.add_parser("rmt",
+			help="Use random mutation table instead of arguments")
+	parser_rmt.add_argument("rmtfile", type=Path, help="Path to the RMT file")
+
 	args = parser.parse_args()
+
+	if args.quiet:
+		args.ignore_warnings = True
+		args.no_progress = True
 
 	return add_outfile_names(args)

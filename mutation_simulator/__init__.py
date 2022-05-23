@@ -13,5 +13,6 @@ from .rmt import (ChromNotExistError, ITNotEnoughAvailChromsError,
                   RangeDefinitionOutOfBoundsError, RatesTooHighError,
                   RatesTooLowError, RMTParseError, SimulationSettings,
                   TitvTooLowError)
-from .util import FastaDuplicateHeaderError, get_md5, load_fasta
+from .util import (FastaDuplicateHeaderError, exit_with_error, format_warning,
+                   get_md5, load_fasta, print_success, print_warning)
 from .vcf_writer import VcfWriterError
