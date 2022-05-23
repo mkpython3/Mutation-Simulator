@@ -1,4 +1,5 @@
 from pathlib import Path
+from sys import stderr, stdout
 
 from .mut_types import MutType
 
@@ -8,6 +9,14 @@ class Defaults:
 	OUTBASE = Path(".")
 
 	IGNORE_WARNINGS = False
+	QUIET = False
+
+	if stdout.isatty() and stderr.isatty():
+		NO_COLOR = False
+		NO_PROGRESS = False
+	else:
+		NO_COLOR = True
+		NO_PROGRESS = True
 
 	SPECIES_NAME = "Unknown"
 	ASSEMBLY_NAME = "Unknown"

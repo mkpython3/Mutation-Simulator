@@ -18,7 +18,6 @@
 
 from __future__ import annotations
 
-from sys import stderr
 from timeit import default_timer as timer
 from typing import TYPE_CHECKING, Tuple
 
@@ -57,8 +56,7 @@ def initialize() -> Tuple[Namespace, Fasta, SimulationSettings]:
 			ChromNotExistError, RangeDefinitionOutOfBoundsError,
 			FastaDuplicateHeaderError,
 			MinimumLengthHigherThanMaximumError) as e:
-		print(f"{Colors.error}ERROR: {e}{Colors.norm}", file=stderr)
-		exit(1)
+		exit_with_error(e, args.no_color)
 	if not args.ignore_warnings:
 		warn_user(args, sim)
 	return args, fasta, sim
@@ -70,11 +68,9 @@ def warn_user(args: Namespace, sim: SimulationSettings):
 	:param sim: Generated SimulationSettings from args, it or rmt mode
 	"""
 	if sim.fasta and args.infile.name != sim.fasta:
-		print(f"{Colors.warn}WARNING: Fasta filename does not match RMT{Colors.norm}",
-				file=stderr)
+		print_warning("Fasta filename does not match RMT", args.no_color)
 	if sim.md5 and get_md5(args.infile) != sim.md5:
-		print(f"{Colors.warn}WARNING: Fasta md5 hash does not match RMT{Colors.norm}",
-				file=stderr)
+		print_warning("Fasta md5 hash does not match RMT", args.no_color)
 
 
 def main():
@@ -88,8 +84,7 @@ def main():
 			mutator.close()
 			fasta.close()
 		except (FastaWriterError, VcfWriterError) as e:
-			print(f"{Colors.error}ERROR: {e}{Colors.norm}", file=stderr)
-			exit(1)
+			exit_with_error(e, args.no_color)
 	if sim.has_it:
 		# Reload after mutations
 		if sim.has_mutations:
@@ -97,19 +92,19 @@ def main():
 				fasta = load_fasta(args.outfasta)
 			except (FastaDuplicateHeaderError, FastaIndexingError,
 					FastaNotFoundError) as e:
-				print(f"{Colors.error}ERROR: {e}{Colors.norm}", file=stderr)
-				exit(1)
+				exit_with_error(e, args.no_color)
 		try:
 			it_mutator = ITMutator(args, fasta, sim)
 			it_mutator.mutate()
 			it_mutator.close()
 			fasta.close()
 		except (FastaWriterError, BedpeWriterError) as e:
-			print(f"{Colors.error}ERROR: {e}{Colors.norm}", file=stderr)
-			exit(1)
+			exit_with_error(e, args.no_color)
 	stop = timer()
 	runtime = round(stop - start, 4)
-	print(f"Mutation-Simulator finished in: {runtime}s")
+	if not args.quiet:
+		print_success(f"Mutation-Simulator finished in: {runtime}s",
+				args.no_color)
 
 
 if __name__ == "__main__":

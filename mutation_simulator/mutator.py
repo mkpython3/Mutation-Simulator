@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Optional, Tuple
 from numpy.random import choice  # type: ignore
 from tqdm import tqdm
 
-from .colors import Colors
 from .fasta_writer import FastaWriter
 from .mut_types import MutType
+from .util import format_warning
 from .vcf_writer import VcfRecord, VcfWriter
 
 if TYPE_CHECKING:
@@ -106,7 +106,8 @@ class Mutator:
 		"""Creates randon mutations and writes them to a Fasta and VCF file."""
 		pbar = tqdm(total=len(self.__sim.chromosomes),
 				desc="Mutating Sequences",
-				position=0)
+				position=0,
+				disable=self.__args.no_progress)
 		for chrom in self.__sim.chromosomes:
 			muts: dict[int, Mutation] = {}
 			tls: list[int] = []
@@ -122,8 +123,9 @@ class Mutator:
 						tlis.extend(rng_tlis)
 
 			if not muts and not self.__args.ignore_warnings:
-				pbar.write(
-						f"{Colors.warn}WARNING: No mutations could be generated on sequence {chrom.number+1} (mutation rates too low).{Colors.norm}",
+				pbar.write(format_warning(
+						f"No mutations could be generated on sequence {chrom.number+1} (mutation rates too low)",
+						self.__args.no_color),
 						file=stderr)
 			if tls:
 				muts = self.__link_tls(muts, tls, tlis)
@@ -174,14 +176,16 @@ class Mutator:
 				f"Generating mutations in range: {rng.start+1}-{rng.stop+1}",  # type: ignore
 				position=1,
 				total=len(start_positions),
-				leave=False)
+				leave=False,
+				disable=self.__args.no_progress)
 		}
 
 		last_mut_range = range(0)
 		for pos in tqdm(list(mutations.keys()),
 				desc="Assigning boundaries",
 				position=1,
-				leave=False):
+				leave=False,
+				disable=self.__args.no_progress):
 			if pos in last_mut_range:
 				del mutations[pos]
 				continue
@@ -318,7 +322,8 @@ class Mutator:
 		pbar = tqdm(total=len(sequence),
 				desc="Writing",
 				position=1,
-				leave=False)
+				leave=False,
+				disable=self.__args.no_progress)
 		while pos < len(sequence):
 			if pos in muts:
 				if muts[pos].type is MutType.SN:

@@ -3,9 +3,12 @@ from __future__ import annotations
 from hashlib import md5
 from itertools import tee
 from random import sample
+from sys import stderr
 from typing import TYPE_CHECKING, Any
 
 from pyfaidx import Fasta
+
+from .colors import Colors
 
 if TYPE_CHECKING:
 	from pathlib import Path
@@ -13,6 +16,50 @@ if TYPE_CHECKING:
 
 class FastaDuplicateHeaderError(Exception):
 	"""Raised when a Fasta contains at least one duplicate header."""
+
+
+def exit_with_error(e: Exception, no_color: bool):
+	"""Prints the exception to stderr and exits with 1.
+	:param e: Exception
+	:param no_color: Disables color
+	"""
+	message = f"ERROR: {e}"
+	if no_color:
+		print(message, file=stderr)
+	else:
+		print(f"{Colors.error}{message}{Colors.norm}", file=stderr)
+	exit(1)
+
+
+def format_warning(msg: str, no_color: bool):
+	"""Formats the warning message and returns it.
+	:param msg: Warning message
+	:param no_color: Disables color
+	"""
+	message = f"WARNING: {msg}"
+	if no_color:
+		return message
+	else:
+		return f"{Colors.warn}{message}{Colors.norm}"
+
+
+def print_warning(msg: str, no_color: bool):
+	"""Prints the warning message to stderr.
+	:param msg: Warning message
+	:param no_color: Disables color
+	"""
+	print(format_warning(msg, no_color), file=stderr)
+
+
+def print_success(msg, no_color):
+	"""Prints a success message
+	:param msg: Success message
+	:param no_color: Disables color
+	"""
+	if no_color:
+		print(msg)
+	else:
+		print(f"{Colors.ok}{msg}{Colors.norm}")
 
 
 def get_md5(fname: Path) -> str:
