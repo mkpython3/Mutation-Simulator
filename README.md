@@ -61,7 +61,7 @@ creating a benchmarking dataset that is as close to biological data as desired.
 
 ## Installation
 + (Recommended) Create and activate a new Python >= 3.10 environment with
-  [pyenv](https://github.com/pyenv/pyenv).
+  [pyenv](https://github.com/pyenv/pyenv) and [pyenv-virtualenv]().
 ```sh
 pyenv install 3.10.0
 pyenv virtualenv 3.10.0 mutation-simulator
@@ -71,6 +71,11 @@ pyenv activate mutation-simulator
 + Install with pip
 ```sh
 pip install Mutation-Simulator
+```
+
++ Should the installation fail due to the `pyfaidx` dependency try
+```sh
+pip install -U setuptools
 ```
 
 ## Dependencies
@@ -419,71 +424,29 @@ Mutation-Simulator only supports haploid mutations, although multiple VCFs from
 different runs of Mutation-Simulator can be merged to form polyploid mutations.
 
 ## Performance
-These tests were performed with Mutation-Simulator version 2 in ARGS mode on a
-single chromosome consisting of a random selection of bases with the following
-parameters:
+These tests were performed in ARGS mode on a single sequence consisting of a
+random selection of bases with the following parameters:
 ```sh
--sn 0.01 -in 0.01 -de 0.01 -du 0.01 -iv 0.01 -tl 0.01 -inl 3 -del 3 -dul 3 -ivl 3 -tll 3
+-sn 0.01 -in 0.01 -de 0.01 -du 0.01 -iv 0.01 -tl 0.01
 ```
 
-Chromosome size \[Mbp\] | Memory peak \[MB\] | Memory average \[MB\] | Runtime \[s\]
---- | --- | --- | ---
-1 | 89 | 63 | <7
-10 | 643 | 343 | <75
-100 | 6025 | 2885 | <700
-1000 | 58911 | 28183 | <6000
-
-Testing Platform: Debian 9
-Processor: Intel(R) Xeon(R) CPU E5-4660 v4 @ 2.20GHz
-
-The upper limit of memory consumption is affected by the number of introduced
-mutations as well as the length of the largest chromosome mutated. Parameters
-chosen reflect a rather intense mutation of the genome. Thus, even genomes with
-large chromosomes up to 1 GB in length can be processed on a desktop computer
-with 64 GB of RAM.
-
-### Comparison
-We tested the performance of Mutation-Simulator version 2 against Simulome,
-simulating SNPs, insertions and deletions with a rate of 0.000825 per base each
-on an [E.coli str. K-12](https://www.ncbi.nlm.nih.gov/nuccore/NC_000913.3)
-genome. In this test Mutation-Simulator performed 24 times faster than
-Simulome.
-
-Program | Parameters | Runtime \[s\] | Memory Peak \[MB\]
---- | --- | --- | ---
-Mutation-Simulator | ecoli_genome.fasta args -sn 0.000825353 -in 0.000825353 -de 0.000825353 | 1.7 | 106.34
-Simulome | --genome=ecoli_genome.fasta --anno=ecoli_anno.gtf --output=output --snp=TRUE --num_snp=1 --whole_genome=TRUE --verbose=1 --indel=3 --ins_len=2 --num_ins=1 --del_len=2 --num_del=1 | 40.1 | 71.68
-
-We also tested its performance in deletions against SVsim on the same E.coli
-genome with a rate of 0.000098 deletions per base and it came out 207 times
-faster.
-
-Program | Parameters | Runtime \[s\] | Memory Peak \[MB\]
---- | --- | --- | ---
-Mutation-Simulator | ecoli_genome.fasta args -de 0.000098241 -del 2 | 1.1 | 105.98
-SVsim | -r ecoli_genome.fasta -o o/svsimfiles -i event | 228.0 | 22.34
-
-Testing Platform: Solus
-Processor: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
-
-The above tests were done using
-[memory-profiler](https://pypi.org/project/memory-profiler/).
-
-We also compared the performance of Mutation-Simulator version 2 against simuG
-simulating SNPs and InDels at a rate of 0.01 and 0.1 on a 10 Mb test sequence
-and Mutation-Simulator was 6785 times faster.
-
-Program | Parameters | Runtime \[s\]
+Sequence length \[Mbp\] | Runtime \[s\] | Memory peak \[MB\]
 --- | --- | ---
-Mutation-Simulator | 10Mb.fa args -sn 0.01 -in 0.005 -de 0.005 | 7
-simuG | -refseq 10Mb.fa -snp_count 100000 -indel_count 100000 -prefix output_prefix | 47497
-Mutation-Simulator | 10Mb.fa args -sn 0.1 -in 0.05 -de 0.05 | 47
-simuG | -refseq 10Mb.fa -snp_count 1000000 -indel_count 1000000 -prefix output_prefix | aborted after several days
+1 | 6.49 | 54.57
+10 | 51.41 | 197,84
+100 | 517.20 | 1480,81
+1000 | TODO | TODO
 
-Testing Platform: Solus
-Processor: Intel(R) Core(TM) i5-8265U CPU @ 1.60GHz
++ Testing Platform: Ubuntu 20.04.3 LTS
++ Processor: AMD EPYC 7452
++ Mutation-Simulator version: 3.0.1
++ Measuring tool: [GNU time](https://www.gnu.org/software/time/)
 
-This test was done using [time](https://www.gnu.org/software/time/).
+The memory consumption is affected by the number of introduced mutations as
+well as the length of the largest sequence mutated. Parameters chosen reflect a
+rather intense mutation of the genome. Thus, even genomes with large
+chromosomes up to 1 Gbp in length can be processed on a desktop computer with
+16 GB of RAM.
 
 ## Citation
 ```
