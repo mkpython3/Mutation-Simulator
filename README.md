@@ -1,4 +1,6 @@
 # Mutation-Simulator
+[![PyPI version](https://badge.fury.io/py/Mutation-Simulator.svg)](https://badge.fury.io/py/Mutation-Simulator)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Mutation-Simulator is a tool for simulating SNPs and SVs in any reference
 genome with cohesive documentation about the implemented mutations. With
@@ -21,7 +23,7 @@ ___
 + Standard output path is now the current working directory
 + `_ms` and `_ms_it` will now always be added to the output filenames
 + Output Fasta file extensions will now be deduced from the input Fasta
-+ `--ignore warnings` is now a top level option available in all modes
++ `-w`/`--ignore-warnings` is now a top level option available in all modes
 ___
 
 ## Motivation
@@ -238,7 +240,7 @@ To learn how to create RMT files read the Workflows section.
 
 ### How to visualize mutation distributions from VCFs
 ![Histogram and KDE plot of variant distribution from a VCF
-file.](https://github.com/mkpython3/Mutation-Simulator/blob/master/data/images/distplot.png)
+file.](https://raw.githubusercontent.com/mkpython3/Mutation-Simulator/master/data/images/distplot.png)
 
 It might be helpful to visualize the mutation distribution of a VCF file, for
 example to compare the distributions of the VCF file used to generate the RMT
