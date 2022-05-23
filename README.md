@@ -430,12 +430,12 @@ random selection of bases with the following parameters:
 -sn 0.01 -in 0.01 -de 0.01 -du 0.01 -iv 0.01 -tl 0.01
 ```
 
-Sequence length \[Mbp\] | Runtime \[s\] | Memory peak \[MB\]
+Sequence length \[Mbp\] | Runtime \[s\] | Memory peak \[GB\]
 --- | --- | ---
-1 | 6.49 | 54.57
-10 | 51.41 | 197,84
-100 | 517.20 | 1480,81
-1000 | TODO | TODO
+1 | 6.49 | <0.01
+10 | 51.41 | 0.20
+100 | 517.20 | 1.48
+1000 | 5235.40 | 13.92
 
 + Testing Platform: Ubuntu 20.04.3 LTS
 + Processor: AMD EPYC 7452
