@@ -61,7 +61,7 @@ creating a benchmarking dataset that is as close to biological data as desired.
 
 ## Installation
 + (Recommended) Create and activate a new Python >= 3.10 environment with
-  [pyenv](https://github.com/pyenv/pyenv) and [pyenv-virtualenv]().
+  [pyenv](https://github.com/pyenv/pyenv) and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv).
 ```sh
 pyenv install 3.10.0
 pyenv virtualenv 3.10.0 mutation-simulator
