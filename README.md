@@ -151,7 +151,7 @@ Option | Option | Description | Default
 The table shows all possible command line options in the ARGS mode. All options
 can be combined as desired. For example:
 ```sh
-mutation-simulator file args -sn 0.01 -in 0.005 -inl 5
+mutation-simulator file args -sn 0.01 -in 0.005 -inmin 1 -inmax 5
 ```
 
 Mutation-Simulator will generate the simulated genome named after the reference
