@@ -68,7 +68,10 @@ pyenv virtualenv 3.10.0 mutation-simulator
 pyenv activate mutation-simulator
 ```
 
-+ Install with pip
+### Install with pip
+
+If you have Python 3.10 installed on your system, you must be able to install with pip:
+
 ```sh
 pip install Mutation-Simulator
 ```
@@ -77,6 +80,19 @@ pip install Mutation-Simulator
 ```sh
 pip install -U setuptools
 ```
+
+### Install in a conda enviroment
+
+If you do not have Python 3.10 installed on your system, or were not able to use `pyenv`, an alternative is using conda:
+
+```sh
+conda create -n py310 python=3.10
+conda activate py310
+pip install Mutation-Simulator
+```
+
+Make sure you are running pip from the conda environment (`py310`).
+
 
 ## Dependencies
 + Python >= 3.10.0
