@@ -108,7 +108,7 @@ class MutationSettings:
 				raise RatesTooLowError(
 						f"Mutation rate/s too low for: {', '.join(typ.name for typ,rate in self.mut_rates.items() if rate <=0)}. If this was intentional use the None keyword instead"
 				)
-			if sum(self.mut_rates.values()) > 1:
+			if sum(self.mut_rates.values()) > 0.5:
 				too_high_rates = ", ".join(typ.name
 						for typ, rate in self.mut_rates.items() if rate > 1)
 				if too_high_rates:
