@@ -91,20 +91,22 @@ def load_fasta(fname: Path) -> Fasta:
 				f"Fasta {fname} contains duplicate header")
 
 
-def sample_with_minimum_distance(n: int, k: int, d: int) -> list[int]:
+def sample_with_minimum_distance(start: int, stop: int, k: int,
+		d: int) -> list[int]:
 	"""Sample of k elements from range(n), with a minimum distance d. Cannot be
 	0 or n.
-	:param n: Range 1-n
+	:param start: Range start-stop
+	:param stop: Range start-stop
 	:param k: Sample size
 	:param d: Minimum distance
 	:return: Random sample
 	"""
-	sampl = sample(range(1, n - (k - 1) * d), k)
+	sampl = sample(range(start, stop - (k - 1) * d), k)
 	indices = sorted(range(len(sampl)), key=lambda i: sampl[i])
-	return [
+	return sorted([
 			s + d * r
 			for s, r in zip(sampl, sorted(indices, key=lambda i: indices[i]))
-	]
+	])
 
 
 def pairwise(iterable: list[Any]) -> "zip"[Any]:

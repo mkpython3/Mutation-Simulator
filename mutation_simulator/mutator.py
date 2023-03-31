@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from .fasta_writer import FastaWriter
 from .mut_types import MutType
-from .util import format_warning
+from .util import format_warning, sample_with_minimum_distance
 from .vcf_writer import VcfRecord, VcfWriter
 
 if TYPE_CHECKING:
@@ -156,8 +156,9 @@ class Mutator:
 		tlis = []
 		start_positions = self.__get_mut_positions(
 				rng.start,
-				rng.stop,  #type: ignore
-				sum(rng.mutation_settings.mut_rates.values()))  #type: ignore
+				rng.stop,  # type:ignore
+				sum(rng.mutation_settings.mut_rates.values()),  # type:ignore
+				min(self.__sim.mut_block.values()))  # type:ignore
 
 		if not start_positions:
 			return {}, [], []
@@ -213,8 +214,8 @@ class Mutator:
 		return mutations, tls, tlis
 
 	@staticmethod
-	def __get_mut_positions(start: int, stop: int,
-			mut_rate: float) -> list[int]:
+	def __get_mut_positions(start: int, stop: int, mut_rate: float,
+			min_dist: int) -> list[int]:
 		"""Returns a sorted list of all mutation starting posititions.
 		:param start: First base of the sequence
 		:param stop: Last base of the sequence
@@ -222,8 +223,7 @@ class Mutator:
 		:return positions: List of mutation positions
 		"""
 		mut_count = int(((stop - start) + 1) * mut_rate)
-		positions = sorted(sample(range(start, stop + 1), mut_count))
-		return positions
+		return sample_with_minimum_distance(start, stop, mut_count, min_dist)
 
 	@staticmethod
 	def __get_stop_position(mutation: Mutation, mut_lengs: dict[str,

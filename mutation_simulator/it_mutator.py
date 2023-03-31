@@ -107,10 +107,9 @@ class ITMutator:
 
 		try:
 			# Keep 1 base at least inbetween breakpoints
-			bp_chrom = sorted(
-					sample_with_minimum_distance(seq_len1, bp_amount, 1))
-			bp_partner = sorted(
-					sample_with_minimum_distance(seq_len2, bp_amount, 1))
+			bp_chrom = sample_with_minimum_distance(1, seq_len1, bp_amount, 1)
+			bp_partner = sample_with_minimum_distance(1, seq_len2, bp_amount,
+					1)
 		except ValueError:
 			if not self.__args.ignore_warnings:
 				print_warning(
@@ -136,11 +135,11 @@ class ITMutator:
 			if i % 2:
 				self.__fasta_writer.write_multi(
 						self.__fasta.get_seq(partner, interval_partner[0] + 1,
-						interval_partner[1]))
+						interval_partner[1]))  #type:ignore
 			else:
 				self.__fasta_writer.write_multi(
 						self.__fasta.get_seq(chrom, interval_chrom[0] + 1,
-						interval_chrom[1]))
+						interval_chrom[1]))  #type:ignore
 
 	def __write_chrom_full(self, chrom: int):
 		"""Writes a chromosome to the opened Fasta file without breakpoints.
