@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Mutation-Simulator
-# Copyright (C) 2023 Marius Kühl
+# Copyright (C) 2024 Marius Kühl
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
