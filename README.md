@@ -15,6 +15,8 @@ translocations from the command line or with highly configurable RMT files.
 
 ___
 ## Breaking changes
+### Version 3.0.2
++ The **sum** of all mutation rates can no longer exceed 0.5
 ### Version 3.0.0
 + Major rewrite resulting in performance and code readability gains
 + Python version 3.10.0 or higher is now required
