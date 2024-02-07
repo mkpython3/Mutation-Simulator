@@ -235,11 +235,11 @@ class Mutator:
 		:return mutation: Mutation with stop value or False if the mutation can
 		not fit
 		"""
-		# Needs a minimum length of 2
-		# If it cant fit at the end it will be skipped
 		if mutation.type is MutType.SN:
 			mutation.stop = mutation.start
 		elif mutation.type is MutType.IV:
+			# Needs a minimum length of 2
+			# If it is generated at the end but can't fit it will be skipped
 			if mutation.start + mut_lengs["max"][MutType.IV] >= chrom_leng - 1:
 				return None
 			else:
@@ -275,7 +275,7 @@ class Mutator:
 		linked
 		"""
 		if len(tls) != len(tlis):
-			tls, tlis = cls.__fix_tl_amount(tls, tlis)
+			tls, tlis = cls.__fix_tl_amount(muts, tls, tlis)
 		shuffle(tls)
 		for tl_pos, tli_pos in zip(tls, tlis):
 			muts[tli_pos] = Mutation(
@@ -285,7 +285,8 @@ class Mutator:
 		return muts
 
 	@staticmethod
-	def __fix_tl_amount(tls: list[int], tlis: list[int]):
+	def __fix_tl_amount(
+			muts: dict[int, Mutation], tls: list[int], tlis: list[int]):
 		"""Removes tl or tli elements until both are equal in length.
 		:param tls: List of translocational deletions
 		:param tlis: List of translocational insertions
@@ -293,9 +294,13 @@ class Mutator:
 		:return tlis: List of translocational insertions with equal length
 		"""
 		while len(tls) < len(tlis):
-			del tlis[randint(0, len(tlis) - 1)]
+			remove_tli_idx = randint(0, len(tlis) - 1)
+			del muts[tlis[remove_tli_idx]]
+			del tlis[remove_tli_idx]
 		while len(tls) > len(tlis):
-			del tls[randint(0, len(tls) - 1)]
+			remove_tls_idx = randint(0, len(tls) - 1)
+			del muts[tls[remove_tls_idx]]
+			del tls[remove_tls_idx]
 		return tls, tlis
 
 	@staticmethod
